@@ -11,21 +11,21 @@ public class User {
     @Id
     @GeneratedValue()
     private Long Id;
-    private String Name;
-    private String Username;
-    private String Password;
-    private String Email;
-    private String Phone;
-    private String Address;
+    private String name;
+    private String username;
+    private String password;
+    private String email;
+    private String phone;
+    private String city;
 
-    public User(Long id, String name, String username, String password, String email, String address, String phone) {
+    public User(Long id, String _name, String _username, String _password, String _email, String _city, String _phone) {
         Id = id;
-        Name = name;
-        Username = username;
-        Password = password;
-        Email = email;
-        Address = address;
-        Phone = phone;
+        name = _name;
+        username = _username;
+        password = _password;
+        email = _email;
+        city = _city;
+        phone = _phone;
     }
 
     public User() {

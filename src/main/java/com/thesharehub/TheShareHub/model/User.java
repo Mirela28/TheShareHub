@@ -3,32 +3,31 @@ package com.thesharehub.TheShareHub.model;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
     @Id
     @GeneratedValue()
-    private Long Id;
-    private String Name;
-    private String Username;
-    private String Password;
-    private String Email;
-    private String Phone;
-    private String Address;
+    private Long id;
+    private String name;
+    private String username;
+    private String password;
+    private String email;
+    private String phone;
+    private String city;
 
-    public User(Long id, String name, String username, String password, String email, String address, String phone) {
-        Id = id;
-        Name = name;
-        Username = username;
-        Password = password;
-        Email = email;
-        Address = address;
-        Phone = phone;
-    }
-
-    public User() {
-
+    public User(String _name, String _username, String _password, String _email, String _phone, String _city) {
+        name = _name;
+        username = _username;
+        password = _password;
+        email = _email;
+        phone = _phone;
+        city = _city;
     }
 }

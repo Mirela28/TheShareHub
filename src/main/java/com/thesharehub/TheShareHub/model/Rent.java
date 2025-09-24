@@ -14,13 +14,13 @@ import java.time.LocalDate;
 public class Rent {
     @Id
     @GeneratedValue()
-    private Long Id;
-    private LocalDate StartDate;
-    private LocalDate EndDate;
+    private Long id;
+    private LocalDate startDate;
+    private LocalDate endDate;
     @ManyToOne
     @JoinColumn(name = "Rentier_Id")
-    private User Rentier;
+    private User rentier;
     @ManyToOne
     @JoinColumn(name = "Item_Id")
-    private Item Item;
+    private Item item;
 }

@@ -13,9 +13,9 @@ import java.util.List;
 @AllArgsConstructor
 public class UserValidator {
 
-    private static UserRepository userRepository;
+    private UserRepository userRepository;
 
-    public static ValidationResult Validate(SignUpViewModel vm) {
+    public ValidationResult Validate(SignUpViewModel vm) {
         List<String> errors = new ArrayList<>();
 
         if(vm.getUsername() == null || vm.getUsername().isEmpty())
@@ -27,8 +27,8 @@ public class UserValidator {
 
         if(vm.getName() == null || vm.getName().isEmpty())
             errors.add("Name is required");
-        else if(vm.getName().length() < 5 || vm.getName().length() > 12)
-            errors.add("Name must be between 5 and 12 characters");
+        else if(vm.getName().length() < 3 || vm.getName().length() > 12)
+            errors.add("Name must be between 3 and 12 characters");
         else if(!vm.getName().matches("[a-zA-Z]+"))
             errors.add("Name must only contain letters");
 
@@ -38,6 +38,8 @@ public class UserValidator {
             errors.add("Password must be at least 5 characters");
         else if(!vm.getPassword().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).+$"))
             errors.add("Password must contain at least one lowercase letter, one uppercase letter, one special character");
+        else if(!vm.getPassword().equals(vm.getConfirmPassword()))
+            errors.add("Passwords do not match");
 
         if(vm.getEmail() == null || vm.getEmail().isEmpty())
             errors.add("Email is required");

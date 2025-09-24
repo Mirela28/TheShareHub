@@ -8,6 +8,6 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class ValidationResult {
-    public boolean Valid;
-    public List<String> Errors;
+    public boolean valid;
+    public List<String> errors;
 }

@@ -18,6 +18,7 @@ public class UserServiceImpl implements UserService {
 
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
+    private UserValidator userValidator;
 
     @Override
     public Optional<User> findByUsername(String username) {
@@ -37,7 +38,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ValidationResult save(SignUpViewModel vm) {
 
-        ValidationResult result = UserValidator.Validate(vm);
+        ValidationResult result = userValidator.Validate(vm);
 
         if(result.isValid()){
             String password = passwordEncoder.encode(vm.getPassword());

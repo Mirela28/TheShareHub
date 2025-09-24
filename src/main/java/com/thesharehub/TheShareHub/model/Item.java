@@ -14,12 +14,12 @@ import java.math.BigDecimal;
 public class Item {
     @Id
     @GeneratedValue
-    private Long Id;
-    private String Name;
-    private String Description;
-    private Category Category;
-    private BigDecimal Price;
+    private Long id;
+    private String name;
+    private String description;
+    private Category category;
+    private BigDecimal price;
     @ManyToOne
     @JoinColumn(name = "Owner_Id")
-    private User Owner;
+    private User owner;
 }

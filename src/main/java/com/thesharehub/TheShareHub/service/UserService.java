@@ -10,5 +10,7 @@ public interface UserService {
     Optional<User> findByUsername(String username);
     Optional<User> findByEmail(String email);
     Optional<User> findByPhone(String phone);
-    ValidationResult save(SignUpViewModel vm);
+    ValidationResult save(String name, String username, String password, String email, String phone, String city);
+
+    boolean isLoginValid(String username, String password);
 }

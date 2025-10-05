@@ -4,6 +4,7 @@ import com.thesharehub.TheShareHub.model.User;
 import com.thesharehub.TheShareHub.service.UserService;
 import com.thesharehub.TheShareHub.validation.UserValidator;
 import com.thesharehub.TheShareHub.validation.ValidationResult;
+import com.thesharehub.TheShareHub.viewmodel.LogInViewModel;
 import com.thesharehub.TheShareHub.viewmodel.SignUpViewModel;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,20 @@ public class UserController {
     @PostMapping("/signup")
     public ResponseEntity<?> createUser(@RequestBody SignUpViewModel vm){
 
-        ValidationResult result = userService.save(vm);
+        if (!vm.getPassword().equals(vm.getConfirmPassword())) {
+            ValidationResult result = new ValidationResult();
+            result.setValid(false);
+            result.errors.add("Passwords do not match.");
+            return ResponseEntity.badRequest().body(result);
+        }
+
+        ValidationResult result = userService.save(vm.getName(),
+                vm.getUsername(),
+                vm.getPassword(),
+                vm.getEmail(),
+                vm.getPhone(),
+                vm.getCity()
+        );
 
         if(!result.isValid()){
             return ResponseEntity.badRequest().body(result);
@@ -31,6 +45,19 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(result);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LogInViewModel vm){
+        boolean valid = userService.isLoginValid(vm.getUsername(), vm.getPassword());
+
+        if(!valid){
+            return ResponseEntity.badRequest().body("Invalid username or password.");
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(valid);
     }
 
 

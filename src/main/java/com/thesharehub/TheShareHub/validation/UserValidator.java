@@ -15,47 +15,45 @@ public class UserValidator {
 
     private UserRepository userRepository;
 
-    public ValidationResult Validate(SignUpViewModel vm) {
+    public ValidationResult Validate(User user) {
         List<String> errors = new ArrayList<>();
 
-        if(vm.getUsername() == null || vm.getUsername().isEmpty())
+        if(user.getUsername() == null || user.getUsername().isEmpty())
             errors.add("Username is required");
-        else if(vm.getUsername().length() < 5 || vm.getUsername().length() > 12)
+        else if(user.getUsername().length() < 5 || user.getUsername().length() > 12)
             errors.add("Username must be between 5 and 12 characters");
-        else if(userRepository.findByUsername(vm.getUsername()).isPresent())
+        else if(userRepository.findByUsername(user.getUsername()).isPresent())
             errors.add("Username already exists");
 
-        if(vm.getName() == null || vm.getName().isEmpty())
+        if(user.getName() == null || user.getName().isEmpty())
             errors.add("Name is required");
-        else if(vm.getName().length() < 3 || vm.getName().length() > 12)
+        else if(user.getName().length() < 3 || user.getName().length() > 12)
             errors.add("Name must be between 3 and 12 characters");
-        else if(!vm.getName().matches("[a-zA-Z]+"))
+        else if(!user.getName().matches("[a-zA-Z]+"))
             errors.add("Name must only contain letters");
 
-        if(vm.getPassword() == null || vm.getPassword().isEmpty())
+        if(user.getPassword() == null || user.getPassword().isEmpty())
             errors.add("Password is required");
-        else if(vm.getPassword().length() < 5 )
+        else if(user.getPassword().length() < 5 )
             errors.add("Password must be at least 5 characters");
-        else if(!vm.getPassword().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).+$"))
+        else if(!user.getPassword().matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).+$"))
             errors.add("Password must contain at least one lowercase letter, one uppercase letter, one special character");
-        else if(!vm.getPassword().equals(vm.getConfirmPassword()))
-            errors.add("Passwords do not match");
 
-        if(vm.getEmail() == null || vm.getEmail().isEmpty())
+        if(user.getEmail() == null || user.getEmail().isEmpty())
             errors.add("Email is required");
-        else if(!vm.getEmail().contains("@"))
+        else if(!user.getEmail().contains("@"))
             errors.add("Invalid email address");
-        else if(userRepository.findByEmail(vm.getEmail()).isPresent())
+        else if(userRepository.findByEmail(user.getEmail()).isPresent())
             errors.add("Email already exists");
 
-        if(vm.getPhone() == null || vm.getPhone().isEmpty())
+        if(user.getPhone() == null || user.getPhone().isEmpty())
             errors.add("Phone is required");
-        else if(!vm.getPhone().replaceAll("[\\s\\-()]","").matches("^(\\+31|0031|0)[1-9][0-9]{7,8}$"))
+        else if(!user.getPhone().replaceAll("[\\s\\-()]","").matches("^(\\+31|0031|0)[1-9][0-9]{7,8}$"))
             errors.add("Invalid phone number");
-        else if(userRepository.findByPhone(vm.getPhone()).isPresent())
+        else if(userRepository.findByPhone(user.getPhone()).isPresent())
             errors.add("Phone already exists");
 
-        if(vm.getCity() == null || vm.getCity().isEmpty())
+        if(user.getCity() == null || user.getCity().isEmpty())
             errors.add("City is required");
 
         return new ValidationResult(errors.isEmpty(), errors);

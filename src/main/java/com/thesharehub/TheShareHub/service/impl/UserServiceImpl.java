@@ -5,7 +5,6 @@ import com.thesharehub.TheShareHub.persistence.UserRepository;
 import com.thesharehub.TheShareHub.service.UserService;
 import com.thesharehub.TheShareHub.validation.UserValidator;
 import com.thesharehub.TheShareHub.validation.ValidationResult;
-import com.thesharehub.TheShareHub.viewmodel.SignUpViewModel;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,15 +35,27 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ValidationResult save(SignUpViewModel vm) {
-
-        ValidationResult result = userValidator.Validate(vm);
+    public ValidationResult save(String name, String username, String password, String email, String phone, String city) {
+        User newUser = new User(name, username, password, email, phone, city);
+        ValidationResult result = userValidator.Validate(newUser);
 
         if(result.isValid()){
-            String password = passwordEncoder.encode(vm.getPassword());
-            User newUser = new User(vm.getName(), vm.getUsername(), password, vm.getEmail(), vm.getPhone(), vm.getCity());
+            String encodedPassword = passwordEncoder.encode(password);
+            newUser.setPassword(encodedPassword);
             userRepository.save(newUser);
         }
         return result;
+    }
+
+    @Override
+    public boolean isLoginValid(String username, String rawPassword) {
+
+        Optional<User> userCheck = userRepository.findByUsername(username);
+        if(userCheck.isPresent()){
+            User user = userCheck.get();
+            return passwordEncoder.matches(rawPassword, user.getPassword());
+        }
+
+        return false;
     }
 }

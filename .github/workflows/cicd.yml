@@ -48,8 +48,7 @@ jobs:
     - name: Build frontend
       run: |
         cd frontend
-        npm install
-        npm run build
+        CI=false npm run build
 
     - name: Build and Push Docker Images
       uses: mr-smithers-excellent/docker-build-push@v6

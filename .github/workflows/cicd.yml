@@ -20,7 +20,8 @@ jobs:
       with:
         repository: Mirela28/thesharehub-frontend
         path: frontend
-        ref: master
+        ref: main
+        persist-credentials: false
 
     - name: Set up Node
       uses: actions/setup-node@v4

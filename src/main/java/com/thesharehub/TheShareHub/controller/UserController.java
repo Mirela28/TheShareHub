@@ -2,15 +2,23 @@ package com.thesharehub.TheShareHub.controller;
 
 import com.thesharehub.TheShareHub.model.User;
 import com.thesharehub.TheShareHub.service.UserService;
-import com.thesharehub.TheShareHub.validation.UserValidator;
+import com.thesharehub.TheShareHub.utils.JwtUtil;
 import com.thesharehub.TheShareHub.validation.ValidationResult;
-import com.thesharehub.TheShareHub.viewmodel.LogInViewModel;
-import com.thesharehub.TheShareHub.viewmodel.SignUpViewModel;
+import com.thesharehub.TheShareHub.dtos.LogInDTO;
+import com.thesharehub.TheShareHub.dtos.SignUpDTO;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @CrossOrigin("http://localhost:3000")
@@ -19,23 +27,24 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private UserService userService;
+    private JwtUtil jwtUtil;
 
     @PostMapping("/signup")
-    public ResponseEntity<?> createUser(@RequestBody SignUpViewModel vm){
+    public ResponseEntity<?> createUser(@RequestBody SignUpDTO signUpDTO){
 
-        if (!vm.getPassword().equals(vm.getConfirmPassword())) {
+        if (!signUpDTO.getPassword().equals(signUpDTO.getConfirmPassword())) {
             ValidationResult result = new ValidationResult();
             result.setValid(false);
             result.errors.add("Passwords do not match.");
             return ResponseEntity.badRequest().body(result);
         }
 
-        ValidationResult result = userService.save(vm.getName(),
-                vm.getUsername(),
-                vm.getPassword(),
-                vm.getEmail(),
-                vm.getPhone(),
-                vm.getCity()
+        ValidationResult result = userService.save(signUpDTO.getName(),
+                signUpDTO.getUsername(),
+                signUpDTO.getPassword(),
+                signUpDTO.getEmail(),
+                signUpDTO.getPhone(),
+                signUpDTO.getCity()
         );
 
         if(!result.isValid()){
@@ -48,16 +57,65 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LogInViewModel vm){
-        boolean valid = userService.isLoginValid(vm.getUsername(), vm.getPassword());
+    public ResponseEntity<?> login(@RequestBody LogInDTO logInDTO){
+        boolean valid = userService.isLoginValid(logInDTO.getUsername(), logInDTO.getPassword());
 
         if(!valid){
             return ResponseEntity.badRequest().body("Invalid username or password.");
         }
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(valid);
+        String jwt = jwtUtil.generateToken(logInDTO.getUsername());
+
+        ResponseCookie jwtCookie = ResponseCookie.from("token", jwt)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(3600)
+                .sameSite("Lax")
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                .body("Login successful");
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(){
+        ResponseCookie cookie = ResponseCookie.from("token", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body("Logged out successfully");
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(HttpServletRequest request){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.OK).body(Map.of("authenticated", false));
+        }
+
+        String username = auth.getName();
+
+        Optional<User> user = userService.findByUsername(username);
+
+        if(user.isPresent()) {
+            return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+                    "authenticated", true,
+                    "user", user
+            ));
+        } else {
+            return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+                    "authenticated", false
+            ));
+        }
     }
 
 

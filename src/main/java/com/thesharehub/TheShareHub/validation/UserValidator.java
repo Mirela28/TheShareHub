@@ -2,7 +2,6 @@ package com.thesharehub.TheShareHub.validation;
 
 import com.thesharehub.TheShareHub.model.User;
 import com.thesharehub.TheShareHub.persistence.UserRepository;
-import com.thesharehub.TheShareHub.viewmodel.SignUpViewModel;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 

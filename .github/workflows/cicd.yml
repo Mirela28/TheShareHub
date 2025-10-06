@@ -7,13 +7,24 @@ on:
     branches: [ "master" ]
 
 jobs:
-  backend:
+  build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Checkout frontend
+      uses: actions/setup-node@v4
+      with:
+        repository: Mirela28/thesharehub-frontend
+        path: frontend
+
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
   
     - name: Set up JDK 24
       uses: actions/setup-java@v4
@@ -27,8 +38,16 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    - name: Build with Gradle Wrapper
+    # Build backend
+    - name: Build backend
       run: ./gradlew build -x test
+
+    # Build frontend
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm ci
+        npm run build
 
     - name: Build and Push Docker Images
       uses: mr-smithers-excellent/docker-build-push@v6
@@ -37,30 +56,6 @@ jobs:
         registry: docker.io
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-        
-
-  frontend:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    needs: backend
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        repository: Mirela28/thesharehub-frontend
-        path: frontend
-
-    - name: Set up Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22
-        
-    - name: Install dependencies
-      run: cd frontend && npm ci
-
-    - name: Build frontend
-      run: cd frontend && npm run build
       
 
   dependency-submission:

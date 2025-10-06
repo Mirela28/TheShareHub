@@ -45,6 +45,11 @@ jobs:
       run: ./gradlew build -x test
 
     # Build frontend
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm install
+    
     - name: Build frontend
       run: |
         cd frontend

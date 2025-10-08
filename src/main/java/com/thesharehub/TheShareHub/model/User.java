@@ -2,6 +2,7 @@ package com.thesharehub.TheShareHub.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class User {
     @Id
-    @GeneratedValue()
+    @GeneratedValue
     private Long id;
     private String name;
     private String username;
@@ -29,5 +30,8 @@ public class User {
         email = _email;
         phone = _phone;
         city = _city;
+    }
+
+    public User(String username, String password) {
     }
 }

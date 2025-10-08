@@ -10,7 +10,7 @@ import java.util.List;
 
 @Component
 @AllArgsConstructor
-public class UserValidator {
+public class UserSignUpValidator {
 
     private UserRepository userRepository;
 

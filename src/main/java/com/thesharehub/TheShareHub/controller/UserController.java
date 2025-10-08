@@ -6,7 +6,6 @@ import com.thesharehub.TheShareHub.utils.JwtUtil;
 import com.thesharehub.TheShareHub.validation.ValidationResult;
 import com.thesharehub.TheShareHub.dtos.LogInDTO;
 import com.thesharehub.TheShareHub.dtos.SignUpDTO;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -17,6 +16,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -33,13 +34,14 @@ public class UserController {
     public ResponseEntity<?> createUser(@RequestBody SignUpDTO signUpDTO){
 
         if (!signUpDTO.getPassword().equals(signUpDTO.getConfirmPassword())) {
-            ValidationResult result = new ValidationResult();
-            result.setValid(false);
-            result.errors.add("Passwords do not match.");
+            List<String> errors = new ArrayList<>();
+            errors.add("Passwords do not match.");
+            ValidationResult result = new ValidationResult(false,errors);
             return ResponseEntity.badRequest().body(result);
         }
 
-        ValidationResult result = userService.save(signUpDTO.getName(),
+        ValidationResult result = userService.save(
+                signUpDTO.getName(),
                 signUpDTO.getUsername(),
                 signUpDTO.getPassword(),
                 signUpDTO.getEmail(),
@@ -51,17 +53,29 @@ public class UserController {
             return ResponseEntity.badRequest().body(result);
         }
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(result);
+        String jwt = jwtUtil.generateToken(signUpDTO.getUsername());
+
+        ResponseCookie jwtCookie = ResponseCookie.from("token", jwt)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(3600)
+                .sameSite("Lax")
+                .build();
+
+        User newUser = userService.findByUsername(signUpDTO.getUsername()).get();
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                .body(newUser);
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LogInDTO logInDTO){
-        boolean valid = userService.isLoginValid(logInDTO.getUsername(), logInDTO.getPassword());
+        ValidationResult result = userService.isLoginValid(logInDTO.getUsername(), logInDTO.getPassword());
 
-        if(!valid){
-            return ResponseEntity.badRequest().body("Invalid username or password.");
+        if(!result.isValid()){
+            return ResponseEntity.badRequest().body(result);
         }
 
         String jwt = jwtUtil.generateToken(logInDTO.getUsername());
@@ -74,9 +88,11 @@ public class UserController {
                 .sameSite("Lax")
                 .build();
 
+        User newUser = userService.findByUsername(logInDTO.getUsername()).get();
+
         return ResponseEntity.status(HttpStatus.OK)
                 .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                .body("Login successful");
+                .body(newUser);
     }
 
     @PostMapping("/logout")

@@ -1,0 +1,60 @@
+package com.thesharehub.TheShareHub.utils;
+
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import lombok.NoArgsConstructor;
+import org.springframework.stereotype.Component;
+import java.util.Date;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.Jwts;
+
+import javax.crypto.SecretKey;
+
+@Component
+@NoArgsConstructor
+public class JwtUtil {
+    private final SecretKey secretKey = getSecretKey();
+
+    public String generateToken(String username) {
+        long expireTime = 1000 * 60 * 60;
+        return Jwts.builder()
+                .subject(username)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + expireTime))
+                .signWith(secretKey)
+                .compact();
+
+    }
+
+    private SecretKey getSecretKey() {
+        String jwtSecret = "dGhlc2hhcmVodWJzZWNyZXRrZXk=dGhlc2hhcmVodWJzZWNyZXRrZXk=";
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public String extractUsername(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return claims.getSubject();
+    }
+
+    public boolean isTokenValid(String token, String username) {
+        return username.equals(extractUsername(token)) && !isTokenExpired(token);
+    }
+
+    public boolean isTokenExpired(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            return claims.getExpiration().before(new Date());
+        } catch(JwtException e) {
+            return true;
+        }
+    }
+}

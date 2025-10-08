@@ -3,9 +3,9 @@ package com.thesharehub.TheShareHub.service.impl;
 import com.thesharehub.TheShareHub.model.User;
 import com.thesharehub.TheShareHub.persistence.UserRepository;
 import com.thesharehub.TheShareHub.service.UserService;
-import com.thesharehub.TheShareHub.validation.UserValidator;
+import com.thesharehub.TheShareHub.validation.UserSignUpValidator;
+import com.thesharehub.TheShareHub.validation.UserLogInValidator;
 import com.thesharehub.TheShareHub.validation.ValidationResult;
-import com.thesharehub.TheShareHub.viewmodel.SignUpViewModel;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,8 @@ public class UserServiceImpl implements UserService {
 
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
-    private UserValidator userValidator;
+    private UserSignUpValidator userSignUpValidator;
+    private UserLogInValidator userLogInValidator;
 
     @Override
     public Optional<User> findByUsername(String username) {
@@ -36,15 +37,22 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ValidationResult save(SignUpViewModel vm) {
-
-        ValidationResult result = userValidator.Validate(vm);
+    public ValidationResult save(String name, String username, String password, String email, String phone, String city) {
+        User newUser = new User(name, username, password, email, phone, city);
+        ValidationResult result = userSignUpValidator.Validate(newUser);
 
         if(result.isValid()){
-            String password = passwordEncoder.encode(vm.getPassword());
-            User newUser = new User(vm.getName(), vm.getUsername(), password, vm.getEmail(), vm.getPhone(), vm.getCity());
+            String encodedPassword = passwordEncoder.encode(password);
+            newUser.setPassword(encodedPassword);
             userRepository.save(newUser);
         }
         return result;
+    }
+
+    @Override
+    public ValidationResult isLoginValid(String username, String password) {
+        User userToCheck = new User(username, password);
+
+        return userLogInValidator.validate(userToCheck);
     }
 }

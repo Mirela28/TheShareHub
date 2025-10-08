@@ -15,10 +15,10 @@ import javax.crypto.SecretKey;
 public class JwtUtil {
     private final SecretKey secretKey = getSecretKey();
 
-    public String generateToken(String username) {
+    public String generateToken(String userUuid) {
         long expireTime = 1000 * 60 * 60;
         return Jwts.builder()
-                .subject(username)
+                .subject(userUuid)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expireTime))
                 .signWith(secretKey)
@@ -32,7 +32,7 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String extractUsername(String token) {
+    public String extractUserUuid(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
@@ -41,20 +41,16 @@ public class JwtUtil {
         return claims.getSubject();
     }
 
-    public boolean isTokenValid(String token, String username) {
-        return username.equals(extractUsername(token)) && !isTokenExpired(token);
-    }
-
-    public boolean isTokenExpired(String token) {
+    public boolean isTokenValid(String token) {
         try {
             Claims claims = Jwts.parser()
                     .verifyWith(secretKey)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
-            return claims.getExpiration().before(new Date());
+            return claims.getExpiration().after(new Date());
         } catch(JwtException e) {
-            return true;
+            return false;
         }
     }
 }

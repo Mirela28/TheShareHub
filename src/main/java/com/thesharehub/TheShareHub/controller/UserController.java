@@ -53,7 +53,8 @@ public class UserController {
             return ResponseEntity.badRequest().body(result);
         }
 
-        String jwt = jwtUtil.generateToken(signUpDTO.getUsername());
+        User newUser = userService.findByUsername(signUpDTO.getUsername()).get();
+        String jwt = jwtUtil.generateToken(newUser.getUuid());
 
         ResponseCookie jwtCookie = ResponseCookie.from("token", jwt)
                 .httpOnly(true)
@@ -62,8 +63,6 @@ public class UserController {
                 .maxAge(3600)
                 .sameSite("Lax")
                 .build();
-
-        User newUser = userService.findByUsername(signUpDTO.getUsername()).get();
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
@@ -78,7 +77,8 @@ public class UserController {
             return ResponseEntity.badRequest().body(result);
         }
 
-        String jwt = jwtUtil.generateToken(logInDTO.getUsername());
+        User loggedUser = userService.findByUsername(logInDTO.getUsername()).get();
+        String jwt = jwtUtil.generateToken(loggedUser.getUuid());
 
         ResponseCookie jwtCookie = ResponseCookie.from("token", jwt)
                 .httpOnly(true)
@@ -88,11 +88,10 @@ public class UserController {
                 .sameSite("Lax")
                 .build();
 
-        User newUser = userService.findByUsername(logInDTO.getUsername()).get();
 
         return ResponseEntity.status(HttpStatus.OK)
                 .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                .body(newUser);
+                .body(loggedUser);
     }
 
     @PostMapping("/logout")
@@ -118,9 +117,9 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.OK).body(Map.of("authenticated", false));
         }
 
-        String username = auth.getName();
+        String uuid = auth.getName();
 
-        Optional<User> user = userService.findByUsername(username);
+        Optional<User> user = userService.findByUuid(uuid);
 
         if(user.isPresent()) {
             return ResponseEntity.status(HttpStatus.OK).body(Map.of(

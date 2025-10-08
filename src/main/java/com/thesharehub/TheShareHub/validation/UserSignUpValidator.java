@@ -19,8 +19,8 @@ public class UserSignUpValidator {
 
         if(user.getUsername() == null || user.getUsername().isEmpty())
             errors.add("Username is required");
-        else if(user.getUsername().length() < 5 || user.getUsername().length() > 12)
-            errors.add("Username must be between 5 and 12 characters");
+        else if(user.getUsername().length() < 5 || user.getUsername().length() > 20)
+            errors.add("Username must be between 5 and 20 characters");
         else if(userRepository.findByUsername(user.getUsername()).isPresent())
             errors.add("Username already exists");
 

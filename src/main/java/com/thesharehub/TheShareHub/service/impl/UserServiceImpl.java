@@ -37,6 +37,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Optional<User> findByUuid(String uuid) {
+        return userRepository.findByUuid(uuid);
+    }
+
+    @Override
     public ValidationResult save(String name, String username, String password, String email, String phone, String city) {
         User newUser = new User(name, username, password, email, phone, city);
         ValidationResult result = userSignUpValidator.Validate(newUser);

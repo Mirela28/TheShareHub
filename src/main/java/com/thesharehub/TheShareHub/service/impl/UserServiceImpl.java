@@ -1,10 +1,12 @@
 package com.thesharehub.TheShareHub.service.impl;
 
+import com.thesharehub.TheShareHub.dtos.UpdateUserDTO;
 import com.thesharehub.TheShareHub.model.User;
 import com.thesharehub.TheShareHub.persistence.UserRepository;
 import com.thesharehub.TheShareHub.service.UserService;
 import com.thesharehub.TheShareHub.validation.UserSignUpValidator;
 import com.thesharehub.TheShareHub.validation.UserLogInValidator;
+import com.thesharehub.TheShareHub.validation.UserUpdateValidator;
 import com.thesharehub.TheShareHub.validation.ValidationResult;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +22,7 @@ public class UserServiceImpl implements UserService {
     private PasswordEncoder passwordEncoder;
     private UserSignUpValidator userSignUpValidator;
     private UserLogInValidator userLogInValidator;
+    private UserUpdateValidator userUpdateValidator;
 
     @Override
     public Optional<User> findByUsername(String username) {
@@ -42,6 +45,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    @Override
     public ValidationResult save(String name, String username, String password, String email, String phone, String city) {
         User newUser = new User(name, username, password, email, phone, city);
         ValidationResult result = userSignUpValidator.Validate(newUser);
@@ -59,5 +67,30 @@ public class UserServiceImpl implements UserService {
         User userToCheck = new User(username, password);
 
         return userLogInValidator.validate(userToCheck);
+    }
+
+    @Override
+    public ValidationResult update(Long userId, UpdateUserDTO updateUserDTO) {
+        User user = userRepository.findById(userId).orElse(null);
+
+        if(user == null){
+            ValidationResult result = new ValidationResult();
+            result.errors.add("User not found");
+            return result;
+        }
+
+        user.setName(updateUserDTO.getName());
+        user.setUsername(updateUserDTO.getUsername());
+        user.setEmail(updateUserDTO.getEmail());
+        user.setPhone(updateUserDTO.getPhone());
+        user.setCity(updateUserDTO.getCity());
+
+        ValidationResult result = userUpdateValidator.Validate(user);
+
+        if(result.isValid()){
+            userRepository.save(user);
+        }
+
+        return result;
     }
 }

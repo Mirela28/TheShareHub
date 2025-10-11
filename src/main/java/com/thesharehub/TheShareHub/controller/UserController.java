@@ -1,5 +1,6 @@
 package com.thesharehub.TheShareHub.controller;
 
+import com.thesharehub.TheShareHub.dtos.UpdateUserDTO;
 import com.thesharehub.TheShareHub.model.User;
 import com.thesharehub.TheShareHub.service.UserService;
 import com.thesharehub.TheShareHub.utils.JwtUtil;
@@ -12,8 +13,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -133,5 +136,31 @@ public class UserController {
         }
     }
 
+    @PostMapping("/update")
+    public ResponseEntity<?> updateUser(@RequestBody UpdateUserDTO updateUserDTO){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+        }
+
+        String uuid = auth.getName();
+        Optional<User> optionalUser = userService.findByUuid(uuid);
+
+        ValidationResult result = userService.update(optionalUser.get().getId(), updateUserDTO);
+
+        if(!result.isValid()) {
+            return ResponseEntity.badRequest().body(result);
+        }
+
+        User updatedUser = userService.findByUuid(uuid).get();
+
+        UsernamePasswordAuthenticationToken newAuth =
+                new UsernamePasswordAuthenticationToken(updatedUser.getUuid(), auth.getCredentials(), auth.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(newAuth);
+
+        return ResponseEntity.status(HttpStatus.OK).body(updatedUser);
+
+    }
 
 }

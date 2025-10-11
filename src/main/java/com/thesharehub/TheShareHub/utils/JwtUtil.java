@@ -11,7 +11,6 @@ import io.jsonwebtoken.Jwts;
 import javax.crypto.SecretKey;
 
 @Component
-@NoArgsConstructor
 public class JwtUtil {
     private final SecretKey secretKey = getSecretKey();
 

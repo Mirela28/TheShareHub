@@ -45,14 +45,4 @@ public class User {
         phone = _phone;
         city = _city;
     }
-
-    public User(Long _userId, String _name, String _username, String _password, String _email, String _phone, String _city) {
-        id = _userId;
-        name = _name;
-        username = _username;
-        password = _password;
-        email = _email;
-        phone = _phone;
-        city = _city;
-    }
 }

@@ -17,11 +17,11 @@ public class JwtUtil {
     public String generateToken(String userUuid) {
         long expireTime = 1000 * 60 * 60;
         return Jwts.builder()
-                .subject(userUuid)
+                .subject(userUuid) //payload, change to id
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expireTime))
-                .signWith(secretKey)
-                .compact();
+                .signWith(secretKey) //jwt signature
+                .compact(); //as string header.payload.signature
 
     }
 
@@ -32,24 +32,24 @@ public class JwtUtil {
     }
 
     public String extractUserUuid(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        Claims claims = extractClaims(token);
         return claims.getSubject();
     }
 
     public boolean isTokenValid(String token) {
         try {
-            Claims claims = Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+            Claims claims = extractClaims(token);
             return claims.getExpiration().after(new Date());
         } catch(JwtException e) {
             return false;
         }
+    }
+
+    private Claims extractClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey) //verifies jwt signature
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

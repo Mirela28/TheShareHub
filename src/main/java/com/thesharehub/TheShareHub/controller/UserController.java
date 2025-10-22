@@ -127,7 +127,7 @@ public class UserController {
         if(user.isPresent()) {
             return ResponseEntity.status(HttpStatus.OK).body(Map.of(
                     "authenticated", true,
-                    "user", user
+                    "user", user.get()
             ));
         } else {
             return ResponseEntity.status(HttpStatus.OK).body(Map.of(
@@ -136,7 +136,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/update")
+    @PutMapping("/update")
     public ResponseEntity<?> updateUser(@RequestBody UpdateUserDTO updateUserDTO){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
@@ -147,20 +147,26 @@ public class UserController {
         String uuid = auth.getName();
         Optional<User> optionalUser = userService.findByUuid(uuid);
 
-        ValidationResult result = userService.update(optionalUser.get().getId(), updateUserDTO);
+        if(optionalUser.isPresent()) {
+            ValidationResult result = userService.update(optionalUser.get().getId(), updateUserDTO);
 
-        if(!result.isValid()) {
-            return ResponseEntity.badRequest().body(result);
+            if(!result.isValid()) {
+                return ResponseEntity.badRequest().body(result);
+            }
+
+            Optional<User> updatedUser = userService.findByUuid(uuid);
+
+            if(updatedUser.isPresent()) {
+                UsernamePasswordAuthenticationToken newAuth =
+                        new UsernamePasswordAuthenticationToken(updatedUser.get().getUuid(), auth.getCredentials(), auth.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(newAuth);
+
+                return ResponseEntity.status(HttpStatus.OK).body(updatedUser.get());
+            }
+
         }
 
-        User updatedUser = userService.findByUuid(uuid).get();
-
-        UsernamePasswordAuthenticationToken newAuth =
-                new UsernamePasswordAuthenticationToken(updatedUser.getUuid(), auth.getCredentials(), auth.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(newAuth);
-
-        return ResponseEntity.status(HttpStatus.OK).body(updatedUser);
-
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
     }
 
 }

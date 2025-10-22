@@ -17,9 +17,11 @@ CREATE TABLE `user` (
 CREATE TABLE `item` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(100) NOT NULL,
-    `description` VARCHAR(500) NOT NULL,
+    `description` VARCHAR(200) NOT NULL,
+    `conditions` VARCHAR(60),
     `category` ENUM('EDUCATION','TECHNOLOGY','TRANSPORT','FURNITURE','CLOTHES','SPORT','OTHER') NOT NULL,
     `price` DECIMAL(10,2) NOT NULL,
+    `image` LONGBLOB NOT NULL,
     `owner_id` BIGINT NOT NULL,
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_item_owner` FOREIGN KEY (`owner_id`) REFERENCES `user`(`id`)

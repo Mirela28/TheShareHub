@@ -42,6 +42,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        if("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String token = null;
 
         if (request.getCookies() != null) {
@@ -53,11 +58,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         if(token != null && jwtUtil.isTokenValid(token)) {
             String userUuid = jwtUtil.extractUserUuid(token);
-            List<GrantedAuthority> authorities = new ArrayList<>();
-            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
             UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(userUuid, null, authorities);
+                    new UsernamePasswordAuthenticationToken(userUuid, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
             auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(auth);
             } else {

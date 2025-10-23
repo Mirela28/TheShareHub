@@ -31,11 +31,10 @@ public class ItemController {
     private ItemService itemService;
     private UserService userService;
 
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<?> createItem(
             @Valid @ModelAttribute ItemCreateDTO itemCreateDTO,
             @RequestParam("image") MultipartFile file,
-            @RequestParam("category") String category,
             BindingResult result) throws IOException {
 
         if (result.hasErrors()) {
@@ -47,7 +46,7 @@ public class ItemController {
         itemDTO.setDescription(itemCreateDTO.getDescription());
         itemDTO.setConditions(itemCreateDTO.getConditions());
         itemDTO.setPrice(itemCreateDTO.getPrice());
-        itemDTO.setCategory(Category.valueOf(category.toUpperCase()));
+        itemDTO.setCategory(itemCreateDTO.getCategory());
         itemDTO.setImage(file.getBytes());
 
         String uuid = SecurityContextHolder.getContext().getAuthentication().getName();

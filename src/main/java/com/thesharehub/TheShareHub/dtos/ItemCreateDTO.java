@@ -26,11 +26,13 @@ public class ItemCreateDTO {
     @Size(max = 100, message = "Item rental conditions must be maximum 100 characters")
     private String conditions;
 
+    @NotNull(message = "Category is required")
+    private Category category;
 
     @NotNull
     @Positive(message = "Price must be greater than 0")
     private BigDecimal price;
 
-
+    
     private Long ownerId;
 }

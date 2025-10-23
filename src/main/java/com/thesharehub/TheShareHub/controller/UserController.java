@@ -33,7 +33,7 @@ public class UserController {
     private UserService userService;
     private JwtUtil jwtUtil;
 
-    @PostMapping("/signup")
+    @PostMapping
     public ResponseEntity<?> createUser(@RequestBody SignUpDTO signUpDTO){
 
         if (!signUpDTO.getPassword().equals(signUpDTO.getConfirmPassword())) {
@@ -57,7 +57,7 @@ public class UserController {
         }
 
         User newUser = userService.findByUsername(signUpDTO.getUsername()).get();
-        String jwt = jwtUtil.generateToken(newUser.getUuid());
+        String jwt = jwtUtil.generateToken(String.valueOf(newUser.getId()));
 
         ResponseCookie jwtCookie = ResponseCookie.from("token", jwt)
                 .httpOnly(true)
@@ -81,7 +81,7 @@ public class UserController {
         }
 
         User loggedUser = userService.findByUsername(logInDTO.getUsername()).get();
-        String jwt = jwtUtil.generateToken(loggedUser.getUuid());
+        String jwt = jwtUtil.generateToken((String.valueOf(loggedUser.getId())));
 
         ResponseCookie jwtCookie = ResponseCookie.from("token", jwt)
                 .httpOnly(true)
@@ -120,9 +120,9 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.OK).body(Map.of("authenticated", false));
         }
 
-        String uuid = auth.getName();
+        String userId = auth.getName();
 
-        Optional<User> user = userService.findByUuid(uuid);
+        Optional<User> user = userService.findById(Long.valueOf(userId));
 
         if(user.isPresent()) {
             return ResponseEntity.status(HttpStatus.OK).body(Map.of(
@@ -136,7 +136,7 @@ public class UserController {
         }
     }
 
-    @PutMapping("/update")
+    @PutMapping
     public ResponseEntity<?> updateUser(@RequestBody UpdateUserDTO updateUserDTO){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
@@ -144,8 +144,8 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
         }
 
-        String uuid = auth.getName();
-        Optional<User> optionalUser = userService.findByUuid(uuid);
+        String userId = auth.getName();
+        Optional<User> optionalUser = userService.findById(Long.valueOf(userId));
 
         if(optionalUser.isPresent()) {
             ValidationResult result = userService.update(optionalUser.get().getId(), updateUserDTO);
@@ -154,11 +154,11 @@ public class UserController {
                 return ResponseEntity.badRequest().body(result);
             }
 
-            Optional<User> updatedUser = userService.findByUuid(uuid);
+            Optional<User> updatedUser = userService.findById(Long.valueOf(userId));
 
             if(updatedUser.isPresent()) {
                 UsernamePasswordAuthenticationToken newAuth =
-                        new UsernamePasswordAuthenticationToken(updatedUser.get().getUuid(), auth.getCredentials(), auth.getAuthorities());
+                        new UsernamePasswordAuthenticationToken(updatedUser.get().getId(), auth.getCredentials(), auth.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(newAuth);
 
                 return ResponseEntity.status(HttpStatus.OK).body(updatedUser.get());

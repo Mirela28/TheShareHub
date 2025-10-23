@@ -42,10 +42,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        if("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            filterChain.doFilter(request, response);
-            return;
-        }
 
         String token = null;
 
@@ -57,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
         if(token != null && jwtUtil.isTokenValid(token)) {
-            String userUuid = jwtUtil.extractUserUuid(token);
+            String userUuid = jwtUtil.extractUserId(token);
 
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(userUuid, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));

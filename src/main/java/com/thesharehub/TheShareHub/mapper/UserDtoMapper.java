@@ -12,12 +12,7 @@ import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface UserDtoMapper {
-    UserDtoMapper INSTANCE = Mappers.getMapper(UserDtoMapper.class);
 
-    @Mapping(target = "confirmPassword", ignore = true)
     User toDomainfromSignUpDTO(SignUpDTO signUpDTO);
-
-    User toDomainfromUpdateDTO(UpdateUserDTO updateUserDTO);
-
     UserDTO toDTO(User user);
 }

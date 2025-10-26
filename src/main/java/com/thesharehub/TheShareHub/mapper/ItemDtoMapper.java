@@ -8,7 +8,6 @@ import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface ItemDtoMapper {
-    ItemDtoMapper INSTANCE = Mappers.getMapper(ItemDtoMapper.class);
 
     @Mapping(target = "owner", ignore = true)
     Item toDomain(ItemDTO itemDTO);

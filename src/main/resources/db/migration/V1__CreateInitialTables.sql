@@ -6,9 +6,7 @@ CREATE TABLE `user` (
     `email` VARCHAR(255) NOT NULL,
     `phone` VARCHAR(20) NOT NULL,
     `city` VARCHAR(100) NOT NULL,
-    `uuid` CHAR(36) NOT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE (`uuid`),
     UNIQUE (`username`),
     UNIQUE (`email`),
     UNIQUE (`phone`)

@@ -8,7 +8,6 @@ import com.thesharehub.TheShareHub.mapper.UserDtoMapper;
 import com.thesharehub.TheShareHub.model.User;
 import com.thesharehub.TheShareHub.persistence.adapters.UserRepositoryAdapter;
 import com.thesharehub.TheShareHub.service.UserService;
-import com.thesharehub.TheShareHub.validation.ValidationResult;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,21 +23,6 @@ public class UserServiceImpl implements UserService {
     private UserRepositoryAdapter userRepository;
     private PasswordEncoder passwordEncoder;
     private UserDtoMapper mapper;
-
-    @Override
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
-    }
-
-    @Override
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
-
-    @Override
-    public Optional<User> findByPhone(String phone) {
-        return userRepository.findByPhone(phone);
-    }
 
     @Override
     public Optional<User> findById(Long id) {

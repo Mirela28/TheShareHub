@@ -6,13 +6,10 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = UserEntityMapper.class)
 public interface ItemEntityMapper {
-    ItemEntityMapper INSTANCE = Mappers.getMapper(ItemEntityMapper.class);
 
-    @Mapping(target = "id", ignore = true)
     ItemEntity toEntity(Item item);
 
-    @Mapping(target = "owner", source = "owner")
     Item toDomain(ItemEntity itemEntity);
 }

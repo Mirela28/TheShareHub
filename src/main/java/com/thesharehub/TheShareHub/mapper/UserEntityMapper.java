@@ -8,9 +8,7 @@ import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface UserEntityMapper {
-    UserEntityMapper INSTANCE = Mappers.getMapper(UserEntityMapper.class);
 
     User toDomain(UserEntity userEntity);
-
     UserEntity toEntity(User user);
 }

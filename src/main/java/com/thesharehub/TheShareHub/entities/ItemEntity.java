@@ -29,5 +29,5 @@ public class ItemEntity {
     private byte[] image;
     @ManyToOne
     @JoinColumn(name = "owner_id")
-    private User owner;
+    private UserEntity owner;
 }

@@ -49,9 +49,8 @@ public class ItemController {
         itemDTO.setCategory(itemCreateDTO.getCategory());
         itemDTO.setImage(file.getBytes());
 
-        String uuid = SecurityContextHolder.getContext().getAuthentication().getName();
-        User owner = userService.findByUuid(uuid).get();
-        itemDTO.setOwnerId(owner.getId());
+        String ownerId = SecurityContextHolder.getContext().getAuthentication().getName();
+        itemDTO.setOwnerId(Long.valueOf(ownerId));
 
         ItemDTO savedItem = itemService.create(itemDTO);
 

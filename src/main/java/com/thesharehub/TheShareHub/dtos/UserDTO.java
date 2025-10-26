@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UpdateUserDTO {
+public class UserDTO {
+    private Long id;
+
     @NotBlank(message = "Name is required")
     @Size(min = 3, max = 12, message = "Name must be between 3 and 12 characters")
     @Pattern(regexp = "[a-zA-Z]+", message = "Name must only contain letters")
@@ -28,4 +30,9 @@ public class UpdateUserDTO {
 
     @NotNull(message = "City is required")
     private String city;
+
+    @NotNull(message = "Password is required")
+    @Size(min = 5, message = "Password must be at least 5 characters")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).+$", message = "Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character")
+    private String password;
 }

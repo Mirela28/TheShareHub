@@ -53,10 +53,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
         if(token != null && jwtUtil.isTokenValid(token)) {
-            String userUuid = jwtUtil.extractUserId(token);
+            Long userId = jwtUtil.extractUserId(token);
 
             UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(userUuid, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+                    new UsernamePasswordAuthenticationToken(userId, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
             auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(auth);
             } else {

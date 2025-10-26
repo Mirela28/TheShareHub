@@ -1,6 +1,7 @@
 package com.thesharehub.TheShareHub.model;
 
 import com.thesharehub.TheShareHub.entities.ItemEntity;
+import com.thesharehub.TheShareHub.entities.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,5 +26,5 @@ public class Rent {
     private ItemEntity item;
     @ManyToOne
     @JoinColumn(name = "rentier_id")
-    private User rentier;
+    private UserEntity rentier;
 }

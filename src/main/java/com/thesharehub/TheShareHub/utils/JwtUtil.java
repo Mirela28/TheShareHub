@@ -14,10 +14,10 @@ import javax.crypto.SecretKey;
 public class JwtUtil {
     private final SecretKey secretKey = getSecretKey();
 
-    public String generateToken(String userId) {
+    public String generateToken(Long userId) {
         long expireTime = 1000 * 60 * 60;
         return Jwts.builder()
-                .subject(userId) //payload
+                .subject(String.valueOf(userId)) //payload
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expireTime))
                 .signWith(secretKey) //jwt signature
@@ -31,9 +31,9 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String extractUserId(String token) {
+    public Long extractUserId(String token) {
         Claims claims = extractClaims(token);
-        return claims.getSubject();
+        return Long.parseLong(claims.getSubject());
     }
 
     public boolean isTokenValid(String token) {

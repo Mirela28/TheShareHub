@@ -1,5 +1,7 @@
 package com.thesharehub.TheShareHub.utils;
 
+import com.thesharehub.TheShareHub.model.User;
+import com.thesharehub.TheShareHub.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -8,12 +10,17 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+@Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
@@ -35,6 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+
         String token = null;
 
         if (request.getCookies() != null) {
@@ -44,13 +52,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         }
-        if(token != null) {
-            String username = jwtUtil.extractUsername(token);
-            if(jwtUtil.isTokenValid(token, username)){
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(username, null, null);
-                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(auth);
+        if(token != null && jwtUtil.isTokenValid(token)) {
+            Long userId = jwtUtil.extractUserId(token);
+
+            UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(userId, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(auth);
             } else {
                 ResponseCookie expiredCookie = ResponseCookie.from("token", "")
                         .httpOnly(true)
@@ -61,7 +69,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .build();
                 response.addHeader(HttpHeaders.SET_COOKIE, expiredCookie.toString());
             }
-        }
 
         filterChain.doFilter(request, response);
     }

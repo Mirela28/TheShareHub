@@ -1,5 +1,6 @@
 package com.thesharehub.TheShareHub.persistence;
 
+import com.thesharehub.TheShareHub.entities.UserEntity;
 import com.thesharehub.TheShareHub.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -7,8 +8,9 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<User,Long> {
-    Optional<User> findByUsername(String username);
-    Optional<User> findByEmail(String email);
-    Optional<User> findByPhone(String phone);
+public interface UserRepository extends JpaRepository<UserEntity,Long> {
+    Optional<UserEntity> findByUsername(String username);
+    Optional<UserEntity> findByEmail(String email);
+    Optional<UserEntity> findByPhone(String phone);
+    Optional<UserEntity> findById(Long id);
 }

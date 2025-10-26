@@ -11,18 +11,17 @@ import io.jsonwebtoken.Jwts;
 import javax.crypto.SecretKey;
 
 @Component
-@NoArgsConstructor
 public class JwtUtil {
     private final SecretKey secretKey = getSecretKey();
 
-    public String generateToken(String username) {
+    public String generateToken(Long userId) {
         long expireTime = 1000 * 60 * 60;
         return Jwts.builder()
-                .subject(username)
+                .subject(String.valueOf(userId)) //payload
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expireTime))
-                .signWith(secretKey)
-                .compact();
+                .signWith(secretKey) //jwt signature
+                .compact(); //as string header.payload.signature
 
     }
 
@@ -32,29 +31,25 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String extractUsername(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(secretKey)
+    public Long extractUserId(String token) {
+        Claims claims = extractClaims(token);
+        return Long.parseLong(claims.getSubject());
+    }
+
+    public boolean isTokenValid(String token) {
+        try {
+            Claims claims = extractClaims(token);
+            return claims.getExpiration().after(new Date());
+        } catch(JwtException e) {
+            return false;
+        }
+    }
+
+    private Claims extractClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey) //verifies jwt signature
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        return claims.getSubject();
-    }
-
-    public boolean isTokenValid(String token, String username) {
-        return username.equals(extractUsername(token)) && !isTokenExpired(token);
-    }
-
-    public boolean isTokenExpired(String token) {
-        try {
-            Claims claims = Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-            return claims.getExpiration().before(new Date());
-        } catch(JwtException e) {
-            return true;
-        }
     }
 }

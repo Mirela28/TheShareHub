@@ -1,22 +1,24 @@
 package com.thesharehub.TheShareHub.controller;
 
+import com.thesharehub.TheShareHub.dtos.UpdateUserDTO;
+import com.thesharehub.TheShareHub.dtos.UserDTO;
 import com.thesharehub.TheShareHub.model.User;
 import com.thesharehub.TheShareHub.service.UserService;
 import com.thesharehub.TheShareHub.utils.JwtUtil;
-import com.thesharehub.TheShareHub.validation.ValidationResult;
 import com.thesharehub.TheShareHub.dtos.LogInDTO;
 import com.thesharehub.TheShareHub.dtos.SignUpDTO;
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,69 +32,72 @@ public class UserController {
     private UserService userService;
     private JwtUtil jwtUtil;
 
-    @PostMapping("/signup")
-    public ResponseEntity<?> createUser(@RequestBody SignUpDTO signUpDTO){
+    @PostMapping
+    public ResponseEntity<?> signup(@Valid @RequestBody SignUpDTO signUpDTO, BindingResult result) {
 
         if (!signUpDTO.getPassword().equals(signUpDTO.getConfirmPassword())) {
-            List<String> errors = new ArrayList<>();
-            errors.add("Passwords do not match.");
-            ValidationResult result = new ValidationResult(false,errors);
-            return ResponseEntity.badRequest().body(result);
+            return ResponseEntity.badRequest().body(List.of("Passwords do not match."));
         }
 
-        ValidationResult result = userService.save(
-                signUpDTO.getName(),
-                signUpDTO.getUsername(),
-                signUpDTO.getPassword(),
-                signUpDTO.getEmail(),
-                signUpDTO.getPhone(),
-                signUpDTO.getCity()
-        );
-
-        if(!result.isValid()){
-            return ResponseEntity.badRequest().body(result);
+        if (result.hasErrors()) {
+            List<String> errors = result.getAllErrors()
+                    .stream()
+                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                    .toList();
+            return ResponseEntity.badRequest().body(errors);
         }
 
-        String jwt = jwtUtil.generateToken(signUpDTO.getUsername());
+        try{
+            UserDTO savedUser = userService.signup(signUpDTO);
 
-        ResponseCookie jwtCookie = ResponseCookie.from("token", jwt)
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(3600)
-                .sameSite("Lax")
-                .build();
+            String jwt = jwtUtil.generateToken(savedUser.getId());
 
-        User newUser = userService.findByUsername(signUpDTO.getUsername()).get();
+            ResponseCookie jwtCookie = ResponseCookie.from("token", jwt)
+                    .httpOnly(true)
+                    .secure(false)
+                    .path("/")
+                    .maxAge(3600)
+                    .sameSite("Lax")
+                    .build();
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                .body(newUser);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                    .body(savedUser);
+        } catch (IllegalArgumentException ex){
+            return ResponseEntity.badRequest().body(List.of(ex.getMessage()));
+        }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LogInDTO logInDTO){
-        ValidationResult result = userService.isLoginValid(logInDTO.getUsername(), logInDTO.getPassword());
+    public ResponseEntity<?> login(@Valid @RequestBody LogInDTO logInDTO, BindingResult result) {
 
-        if(!result.isValid()){
-            return ResponseEntity.badRequest().body(result);
+        if (result.hasErrors()) {
+            List<String> errors = result.getAllErrors()
+                    .stream()
+                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                    .toList();
+            return ResponseEntity.badRequest().body(errors);
         }
 
-        String jwt = jwtUtil.generateToken(logInDTO.getUsername());
+        try{
+            UserDTO loggedUser = userService.login(logInDTO);
 
-        ResponseCookie jwtCookie = ResponseCookie.from("token", jwt)
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(3600)
-                .sameSite("Lax")
-                .build();
+            String jwt = jwtUtil.generateToken(loggedUser.getId());
 
-        User newUser = userService.findByUsername(logInDTO.getUsername()).get();
+            ResponseCookie jwtCookie = ResponseCookie.from("token", jwt)
+                    .httpOnly(true)
+                    .secure(false)
+                    .path("/")
+                    .maxAge(3600)
+                    .sameSite("Lax")
+                    .build();
 
-        return ResponseEntity.status(HttpStatus.OK)
-                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                .body(newUser);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                    .body(loggedUser);
+        } catch (IllegalArgumentException ex){
+            return ResponseEntity.badRequest().body(List.of(ex.getMessage()));
+        }
     }
 
     @PostMapping("/logout")
@@ -111,21 +116,21 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(HttpServletRequest request){
+    public ResponseEntity<?> getCurrentUser(){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.OK).body(Map.of("authenticated", false));
         }
 
-        String username = auth.getName();
+        Long userId = Long.valueOf(auth.getName());
 
-        Optional<User> user = userService.findByUsername(username);
+        Optional<User> user = userService.findById(userId);
 
         if(user.isPresent()) {
             return ResponseEntity.status(HttpStatus.OK).body(Map.of(
                     "authenticated", true,
-                    "user", user
+                    "user", user.get()
             ));
         } else {
             return ResponseEntity.status(HttpStatus.OK).body(Map.of(
@@ -134,5 +139,35 @@ public class UserController {
         }
     }
 
+    @PutMapping
+    public ResponseEntity<?> updateUser(@Valid @RequestBody UpdateUserDTO updateUserDTO,BindingResult result){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+        }
+
+        if (result.hasErrors()) {
+            List<String> errors = result.getAllErrors()
+                    .stream()
+                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                    .toList();
+            return ResponseEntity.badRequest().body(errors);
+        }
+
+        Long userId = Long.valueOf(auth.getName());
+
+        try{
+            UserDTO updatedUser = userService.update(userId, updateUserDTO);
+
+            UsernamePasswordAuthenticationToken newAuth =
+                    new UsernamePasswordAuthenticationToken(updatedUser.getId(), auth.getCredentials(), auth.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(newAuth);
+
+            return ResponseEntity.status(HttpStatus.OK).body(updatedUser);
+        } catch (IllegalArgumentException ex){
+            return ResponseEntity.badRequest().body(List.of(ex.getMessage()));
+        }
+    }
 
 }

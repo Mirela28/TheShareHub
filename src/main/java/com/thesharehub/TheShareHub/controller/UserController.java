@@ -119,11 +119,16 @@ public class UserController {
     public ResponseEntity<?> getCurrentUser(){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        if (auth == null || !auth.isAuthenticated()) {
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
             return ResponseEntity.status(HttpStatus.OK).body(Map.of("authenticated", false));
         }
 
-        Long userId = Long.valueOf(auth.getName());
+        Long userId;
+        try {
+            userId = Long.valueOf(auth.getName());
+        } catch (NumberFormatException e) {
+            return ResponseEntity.ok(Map.of("authenticated", false));
+        }
 
         Optional<User> user = userService.findById(userId);
 

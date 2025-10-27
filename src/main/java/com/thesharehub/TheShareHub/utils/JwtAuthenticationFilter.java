@@ -37,11 +37,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
         // Skip JWT check for public endpoints
-        if (path.equals("/users/signup") || path.equals("/users/login")) {
+        if (path.equals("/users") && request.getMethod().equalsIgnoreCase("POST") ||
+                path.equals("/users/login")) {
             filterChain.doFilter(request, response);
             return;
         }
-
 
         String token = null;
 
@@ -60,14 +60,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(auth);
             } else {
-                ResponseCookie expiredCookie = ResponseCookie.from("token", "")
-                        .httpOnly(true)
-                        .secure(false)
-                        .path("/")
-                        .maxAge(0)
-                        .sameSite("Lax")
-                        .build();
-                response.addHeader(HttpHeaders.SET_COOKIE, expiredCookie.toString());
+                SecurityContextHolder.clearContext();
+
+//                ResponseCookie expiredCookie = ResponseCookie.from("token", "")
+//                        .httpOnly(true)
+//                        .secure(false)
+//                        .path("/")
+//                        .maxAge(0)
+//                        .sameSite("Lax")
+//                        .build();
+//                response.addHeader(HttpHeaders.SET_COOKIE, expiredCookie.toString());
             }
 
         filterChain.doFilter(request, response);

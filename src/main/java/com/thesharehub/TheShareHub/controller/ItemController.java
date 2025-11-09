@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.List;
 
 @RestController
@@ -41,7 +42,9 @@ public class ItemController {
         itemDTO.setConditions(itemCreateDTO.getConditions());
         itemDTO.setPrice(itemCreateDTO.getPrice());
         itemDTO.setCategory(itemCreateDTO.getCategory());
-        itemDTO.setImage(file.getBytes());
+
+        String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
+        itemDTO.setImage(base64Image);
 
         String ownerId = SecurityContextHolder.getContext().getAuthentication().getName();
         itemDTO.setOwnerId(Long.valueOf(ownerId));
@@ -51,7 +54,7 @@ public class ItemController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedItem);
     }
 
-    @PostMapping("/items/search")
+    @PostMapping("/search")
     public ResponseEntity<?> searchItem(@RequestBody ItemFilterDTO filters) {
         try {
             Page<ItemDTO> foundItems = itemService.searchItems(filters);

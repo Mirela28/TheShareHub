@@ -9,7 +9,7 @@ import java.util.Date;
 @Data
 public class ItemFilterDTO {
     private String query;
-    private Category category;
+    private String category;
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
     private Date startDate;

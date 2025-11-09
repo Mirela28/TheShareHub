@@ -43,9 +43,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/users/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/me").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/items/search").permitAll()
                         .anyRequest().authenticated()
                 )
-                //.cors(Customizer.withDefaults())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

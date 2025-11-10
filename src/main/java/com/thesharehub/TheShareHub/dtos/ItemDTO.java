@@ -41,7 +41,7 @@ public class ItemDTO {
     private BigDecimal price;
 
     @NotNull(message = "Item image is required")
-    private byte[] image;
+    private String image;
 
     private Long ownerId;
 }

@@ -29,12 +29,7 @@ public class ItemController {
     @PostMapping
     public ResponseEntity<?> createItem(
             @Valid @ModelAttribute ItemCreateDTO itemCreateDTO,
-            @RequestParam("image") MultipartFile file,
-            BindingResult result) throws IOException {
-
-        if (result.hasErrors()) {
-            return ResponseEntity.badRequest().body(result.getAllErrors());
-        }
+            @RequestParam("image") MultipartFile file) throws IOException {
 
         ItemDTO itemDTO = new ItemDTO();
         itemDTO.setName(itemCreateDTO.getName());

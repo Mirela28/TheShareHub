@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Item {
+    private Long id;
     private String name;
     private String description;
     private String conditions;

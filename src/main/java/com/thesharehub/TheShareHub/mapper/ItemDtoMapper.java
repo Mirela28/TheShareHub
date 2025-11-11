@@ -16,6 +16,9 @@ public interface ItemDtoMapper {
     Item toDomain(ItemDTO itemDTO);
 
     @Mapping(target = "ownerId", source = "owner.id")
+    @Mapping(source = "owner.name", target = "ownerName")
+    @Mapping(source = "owner.phone", target = "ownerPhone")
+    @Mapping(source = "owner.email", target = "ownerEmail")
     @Mapping(target = "image", expression = "java(toBase64(item.getImage()))")
     ItemDTO toDTO(Item item);
 

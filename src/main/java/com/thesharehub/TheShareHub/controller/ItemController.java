@@ -58,4 +58,19 @@ public class ItemController {
             return ResponseEntity.badRequest().body(List.of(ex.getMessage()));
         }
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getItemById(@PathVariable Long id) {
+        try {
+            ItemDTO itemDTO = itemService.findById(id);
+            if (itemDTO != null) {
+                return ResponseEntity.status(HttpStatus.OK).body(itemDTO);
+            }
+            else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of("Item not found"));
+            }
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.OK).body(List.of(ex.getMessage()));
+        }
+    }
 }

@@ -14,6 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.NoSuchElementException;
+
 @Service
 @AllArgsConstructor
 public class ItemServiceImpl implements ItemService {
@@ -60,5 +62,30 @@ public class ItemServiceImpl implements ItemService {
                 pageRequest
         );
         return items.map(mapper::toDTO);
+    }
+
+    @Override
+    public ItemDTO findById(long id) {
+        Item item = itemRepository.findById(id);
+
+        User owner = item.getOwner();
+        String ownerName = owner != null ? owner.getName() : "Unknown";
+        String ownerPhone = owner != null ? owner.getPhone() : "Unknown";
+        String ownerEmail = owner != null ? owner.getEmail() : "Unknown";
+
+        ItemDTO itemDTO = new ItemDTO();
+        itemDTO.setId(id);
+        itemDTO.setName(item.getName());
+        itemDTO.setDescription(item.getDescription());
+        itemDTO.setConditions(item.getConditions());
+        itemDTO.setCategory(item.getCategory());
+        itemDTO.setPrice(item.getPrice());
+        itemDTO.setImage(mapper.toBase64(item.getImage()));
+        itemDTO.setOwnerId(owner != null ? owner.getId() : null);
+        itemDTO.setOwnerName(ownerName);
+        itemDTO.setOwnerPhone(ownerPhone);
+        itemDTO.setOwnerEmail(ownerEmail);
+
+        return itemDTO;
     }
 }

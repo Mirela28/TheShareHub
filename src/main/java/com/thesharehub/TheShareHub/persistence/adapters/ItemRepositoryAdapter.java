@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Repository
@@ -36,6 +37,13 @@ public class ItemRepositoryAdapter {
         Page<ItemEntity> entities = itemRepository.searchItems(query, category, minPrice, maxPrice, pageable);
 
         return entities.map(mapper::toDomain);
+    }
+
+    public Item findById(Long id) {
+        ItemEntity itemEntity = itemRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Item not found with id: " + id));
+
+        return mapper.toDomain(itemEntity);
     }
 
 }

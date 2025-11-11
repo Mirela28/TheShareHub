@@ -10,4 +10,5 @@ public interface ItemService {
     ItemDTO create(ItemDTO itemDTO);
     ItemDTO findByName(String name);
     Page<ItemDTO> searchItems(ItemFilterDTO filters);
+    ItemDTO findById(long id);
 }

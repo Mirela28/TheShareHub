@@ -7,6 +7,7 @@ import com.thesharehub.TheShareHub.mapper.ItemDtoMapper;
 import com.thesharehub.TheShareHub.mapper.RentDtoMapper;
 import com.thesharehub.TheShareHub.model.Item;
 import com.thesharehub.TheShareHub.model.Rent;
+import com.thesharehub.TheShareHub.model.RentStatus;
 import com.thesharehub.TheShareHub.model.User;
 import com.thesharehub.TheShareHub.persistence.RentRepository;
 import com.thesharehub.TheShareHub.persistence.adapters.RentRepositoryAdapter;
@@ -34,7 +35,7 @@ public class RentServiceImpl implements RentService {
         ItemDTO itemDTO = itemService.findById(rentCreateDTO.getItemId());
         Item item = itemMapper.toDomain(itemDTO);
 
-        var rentierOptional = userService.findById(item.getOwner().getId());
+        var rentierOptional = userService.findById(itemDTO.getOwnerId());
         User rentier = rentierOptional.orElseThrow(() ->
                 new NoSuchElementException("Owner with id " + item.getOwner().getId() + " not found")
         );
@@ -42,6 +43,7 @@ public class RentServiceImpl implements RentService {
         Rent rent = mapper.toDomainfromRentCreateDTO(rentCreateDTO);
         rent.setRentier(rentier);
         rent.setItem(item);
+        rent.setStatus(RentStatus.PENDING);
 
         Rent savedRent = rentRepository.save(rent);
         return mapper.toDTO(savedRent);

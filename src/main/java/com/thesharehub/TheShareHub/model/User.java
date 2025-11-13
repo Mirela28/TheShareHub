@@ -17,7 +17,6 @@ public class User {
     private String email;
     private String phone;
     private String city;
-    List<Item> items;
 
     public User(String _username, String _password) {
         username = _username;

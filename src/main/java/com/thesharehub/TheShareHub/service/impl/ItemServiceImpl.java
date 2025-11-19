@@ -14,6 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -27,6 +29,13 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDTO create(ItemDTO itemDTO) {
+        List<String> errors = new ArrayList<>();
+        if (itemRepository.findByName(itemDTO.getName()).isPresent())
+            errors.add("Item name already exists");
+
+        if(!errors.isEmpty())
+            throw new IllegalArgumentException(String.join(", ", errors));
+
         User owner = userService.findById(itemDTO.getOwnerId()).get();
 
         Item item = mapper.toDomain(itemDTO);

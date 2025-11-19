@@ -31,22 +31,27 @@ public class ItemController {
             @Valid @ModelAttribute ItemCreateDTO itemCreateDTO,
             @RequestParam("image") MultipartFile file) throws IOException {
 
-        ItemDTO itemDTO = new ItemDTO();
-        itemDTO.setName(itemCreateDTO.getName());
-        itemDTO.setDescription(itemCreateDTO.getDescription());
-        itemDTO.setConditions(itemCreateDTO.getConditions());
-        itemDTO.setPrice(itemCreateDTO.getPrice());
-        itemDTO.setCategory(itemCreateDTO.getCategory());
+        try {
+            ItemDTO itemDTO = new ItemDTO();
+            itemDTO.setName(itemCreateDTO.getName());
+            itemDTO.setDescription(itemCreateDTO.getDescription());
+            itemDTO.setConditions(itemCreateDTO.getConditions());
+            itemDTO.setPrice(itemCreateDTO.getPrice());
+            itemDTO.setCategory(itemCreateDTO.getCategory());
 
-        String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
-        itemDTO.setImage(base64Image);
+            String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
+            itemDTO.setImage(base64Image);
 
-        String ownerId = SecurityContextHolder.getContext().getAuthentication().getName();
-        itemDTO.setOwnerId(Long.valueOf(ownerId));
+            String ownerId = SecurityContextHolder.getContext().getAuthentication().getName();
+            itemDTO.setOwnerId(Long.valueOf(ownerId));
 
-        ItemDTO savedItem = itemService.create(itemDTO);
+            ItemDTO savedItem = itemService.create(itemDTO);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedItem);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedItem);
+
+        } catch (IllegalArgumentException ex){
+        return ResponseEntity.badRequest().body(List.of(ex.getMessage()));
+        }
     }
 
     @PostMapping("/search")

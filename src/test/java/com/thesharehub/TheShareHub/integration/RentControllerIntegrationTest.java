@@ -7,6 +7,7 @@ import com.thesharehub.TheShareHub.entities.ItemEntity;
 import com.thesharehub.TheShareHub.entities.UserEntity;
 import com.thesharehub.TheShareHub.persistence.ItemRepository;
 import com.thesharehub.TheShareHub.persistence.UserRepository;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(
         locations = "classpath:application-integrationtest.properties"
 )
+@Transactional
 public class RentControllerIntegrationTest {
 
     @Autowired

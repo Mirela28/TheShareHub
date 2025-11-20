@@ -9,7 +9,7 @@ COPY src ./src
 
 RUN chmod +x ./gradlew && ./gradlew bootJar -x test
 
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup

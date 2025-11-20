@@ -5,13 +5,10 @@ import com.thesharehub.TheShareHub.TheShareHubApplication;
 import com.thesharehub.TheShareHub.dtos.LogInDTO;
 import com.thesharehub.TheShareHub.dtos.SignUpDTO;
 import com.thesharehub.TheShareHub.dtos.UpdateUserDTO;
-import com.thesharehub.TheShareHub.dtos.UserDTO;
 import com.thesharehub.TheShareHub.entities.UserEntity;
-import com.thesharehub.TheShareHub.model.User;
 import com.thesharehub.TheShareHub.persistence.UserRepository;
 import com.thesharehub.TheShareHub.utils.JwtUtil;
 import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestPropertySource(
-        locations = "classpath:application-integrationtest.properties"
+        locations = "classpath:application-test.properties"
 )
 @Transactional
 public class UserControllerIntegrationTest {

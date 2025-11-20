@@ -24,10 +24,10 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Build backend (skip tests)
+      - name: Build backend 
         run: ./gradlew build -x test
 
-      - name: Run unit & integration tests (activate test profile)
+      - name: Run unit tests
         env:
           SPRING_PROFILES_ACTIVE: test
         run: ./gradlew test

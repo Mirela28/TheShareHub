@@ -51,8 +51,7 @@ jobs:
 
       - name: Build backend Docker image
         env:
-          IMAGE_BASE: ${{ secrets.DOCKER_USERNAME }}/thesharehub-backend
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_BASE: ${{ secrets.DOCKER_USERNAME }}/backend
         run: |
           docker build -t $IMAGE_BASE:latest -t $IMAGE_BASE:$IMAGE_TAG .
           docker push $IMAGE_BASE:$IMAGE_TAG

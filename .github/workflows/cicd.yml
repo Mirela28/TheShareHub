@@ -52,6 +52,7 @@ jobs:
       - name: Build backend Docker image
         env:
           IMAGE_BASE: ${{ secrets.DOCKER_USERNAME }}/backend
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           docker build -t $IMAGE_BASE:latest -t $IMAGE_BASE:$IMAGE_TAG .
           docker push $IMAGE_BASE:$IMAGE_TAG

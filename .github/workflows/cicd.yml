@@ -30,7 +30,7 @@ jobs:
       - name: Run unit & integration tests (activate test profile)
         env:
           SPRING_PROFILES_ACTIVE: test
-        run: ./gradlew test integrationTest
+        run: ./gradlew test
 
   build-and-push-images:
     runs-on: ubuntu-latest

@@ -24,11 +24,13 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Build backend
-        run: ./gradlew build
+      - name: Build backend (skip tests)
+        run: ./gradlew build -x test
 
-      - name: Run unit & integration tests
-        run: ./gradlew test integrationTest -Dspring.profiles.active=test
+      - name: Run unit & integration tests (activate test profile)
+        env:
+          SPRING_PROFILES_ACTIVE: test
+        run: ./gradlew test integrationTest
 
   build-and-push-images:
     runs-on: ubuntu-latest

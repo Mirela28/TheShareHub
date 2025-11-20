@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ItemDTO {
+    private Long id;
     @NotBlank(message = "Item name is required")
     @Size(min = 3, max = 20, message = "Item name must be between 3 and 20 characters")
     private String name;
@@ -44,4 +45,7 @@ public class ItemDTO {
     private String image;
 
     private Long ownerId;
+    private String ownerName;
+    private String ownerPhone;
+    private String ownerEmail;
 }

@@ -29,29 +29,29 @@ public class ItemController {
     @PostMapping
     public ResponseEntity<?> createItem(
             @Valid @ModelAttribute ItemCreateDTO itemCreateDTO,
-            @RequestParam("image") MultipartFile file,
-            BindingResult result) throws IOException {
+            @RequestParam("image") MultipartFile file) throws IOException {
 
-        if (result.hasErrors()) {
-            return ResponseEntity.badRequest().body(result.getAllErrors());
+        try {
+            ItemDTO itemDTO = new ItemDTO();
+            itemDTO.setName(itemCreateDTO.getName());
+            itemDTO.setDescription(itemCreateDTO.getDescription());
+            itemDTO.setConditions(itemCreateDTO.getConditions());
+            itemDTO.setPrice(itemCreateDTO.getPrice());
+            itemDTO.setCategory(itemCreateDTO.getCategory());
+
+            String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
+            itemDTO.setImage(base64Image);
+
+            String ownerId = SecurityContextHolder.getContext().getAuthentication().getName();
+            itemDTO.setOwnerId(Long.valueOf(ownerId));
+
+            ItemDTO savedItem = itemService.create(itemDTO);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedItem);
+
+        } catch (IllegalArgumentException ex){
+        return ResponseEntity.badRequest().body(List.of(ex.getMessage()));
         }
-
-        ItemDTO itemDTO = new ItemDTO();
-        itemDTO.setName(itemCreateDTO.getName());
-        itemDTO.setDescription(itemCreateDTO.getDescription());
-        itemDTO.setConditions(itemCreateDTO.getConditions());
-        itemDTO.setPrice(itemCreateDTO.getPrice());
-        itemDTO.setCategory(itemCreateDTO.getCategory());
-
-        String base64Image = Base64.getEncoder().encodeToString(file.getBytes());
-        itemDTO.setImage(base64Image);
-
-        String ownerId = SecurityContextHolder.getContext().getAuthentication().getName();
-        itemDTO.setOwnerId(Long.valueOf(ownerId));
-
-        ItemDTO savedItem = itemService.create(itemDTO);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedItem);
     }
 
     @PostMapping("/search")
@@ -61,6 +61,21 @@ public class ItemController {
             return ResponseEntity.status(HttpStatus.OK).body(foundItems);
         } catch (Exception ex) {
             return ResponseEntity.badRequest().body(List.of(ex.getMessage()));
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getItemById(@PathVariable Long id) {
+        try {
+            ItemDTO itemDTO = itemService.findById(id);
+            if (itemDTO != null) {
+                return ResponseEntity.status(HttpStatus.OK).body(itemDTO);
+            }
+            else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(List.of("Item not found"));
+            }
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.OK).body(List.of(ex.getMessage()));
         }
     }
 }

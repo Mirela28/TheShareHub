@@ -33,18 +33,10 @@ public class UserController {
     private JwtUtil jwtUtil;
 
     @PostMapping
-    public ResponseEntity<?> signup(@Valid @RequestBody SignUpDTO signUpDTO, BindingResult result) {
+    public ResponseEntity<?> signup(@Valid @RequestBody SignUpDTO signUpDTO) {
 
         if (!signUpDTO.getPassword().equals(signUpDTO.getConfirmPassword())) {
             return ResponseEntity.badRequest().body(List.of("Passwords do not match."));
-        }
-
-        if (result.hasErrors()) {
-            List<String> errors = result.getAllErrors()
-                    .stream()
-                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
-                    .toList();
-            return ResponseEntity.badRequest().body(errors);
         }
 
         try{
@@ -69,15 +61,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LogInDTO logInDTO, BindingResult result) {
-
-        if (result.hasErrors()) {
-            List<String> errors = result.getAllErrors()
-                    .stream()
-                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
-                    .toList();
-            return ResponseEntity.badRequest().body(errors);
-        }
+    public ResponseEntity<?> login(@Valid @RequestBody LogInDTO logInDTO) {
 
         try{
             UserDTO loggedUser = userService.login(logInDTO);
@@ -145,19 +129,11 @@ public class UserController {
     }
 
     @PutMapping
-    public ResponseEntity<?> updateUser(@Valid @RequestBody UpdateUserDTO updateUserDTO,BindingResult result){
+    public ResponseEntity<?> updateUser(@Valid @RequestBody UpdateUserDTO updateUserDTO){
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
-        }
-
-        if (result.hasErrors()) {
-            List<String> errors = result.getAllErrors()
-                    .stream()
-                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
-                    .toList();
-            return ResponseEntity.badRequest().body(errors);
         }
 
         Long userId = Long.valueOf(auth.getName());

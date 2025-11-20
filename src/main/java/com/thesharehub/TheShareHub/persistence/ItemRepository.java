@@ -16,6 +16,7 @@ import java.util.Optional;
 @Repository
 public interface ItemRepository extends JpaRepository<ItemEntity,Long> {
     Optional<ItemEntity> findByName(String name);
+    ItemEntity findById(long id);
 
     @Query("""
         SELECT i FROM ItemEntity i

@@ -1,4 +1,4 @@
-FROM gradle:8.6-jdk17 AS builder
+FROM gradle:8.6-jdk24 AS builder
 WORKDIR /home/gradle/project
 
 COPY gradlew .

@@ -1,36 +1,22 @@
-# Stage 1: Build React frontend
-FROM node:22 AS frontend-build
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm ci
-COPY frontend/ .
-RUN npm run build
+FROM gradle:8.6-jdk17 AS builder
+WORKDIR /home/gradle/project
 
-# Stage 2: Build Spring Boot backend
-FROM eclipse-temurin:24-jdk-alpine AS backend-build
-WORKDIR /app/backend
+COPY gradlew .
+COPY gradle gradle
+COPY settings.gradle build.gradle ./
 
-# Copy Gradle wrapper and build files
-COPY gradlew ./
-COPY gradle ./gradle
-COPY build.gradle settings.gradle ./
 COPY src ./src
 
-# Make gradlew executable
-RUN chmod +x gradlew
+RUN chmod +x ./gradlew && ./gradlew bootJar -x test
 
-# Build backend jar
-RUN ./gradlew bootJar -x test
-
-# Stage 3: Combine frontend + backend
-FROM eclipse-temurin:24-jdk-alpine
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-# Copy backend jar
-COPY --from=backend-build /app/backend/build/libs/*.jar app.jar
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
 
-# Copy frontend build into Spring Boot static folder
-COPY --from=frontend-build /app/frontend/build ./static
+COPY --from=builder /home/gradle/project/build/libs/*.jar app.jar
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+ENTRYPOINT ["java","-jar","/app/app.jar"]

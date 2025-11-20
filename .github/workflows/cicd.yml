@@ -96,4 +96,4 @@ jobs:
           # Use the local docker-compose.yml in this repo (backend repo contains compose file)
           docker compose --env-file .env up -d --build
 
-      
+    

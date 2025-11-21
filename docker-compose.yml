@@ -1,14 +1,30 @@
-version: "3.9"
+version: '3.9'
+
 services:
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: MGsql2812!
+      MYSQL_DATABASE: thesharehub
+      MYSQL_USER: root
+      MYSQL_PASSWORD: MGsql2812!
+    ports:
+      - "3306:3306"
+
   backend:
     image: mirela28/thesharehub-backend:latest
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/thesharehub
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: MGsql2812!
+    depends_on:
+      - mysql
     ports:
       - "8080:8080"
 
   frontend:
     image: mirela28/thesharehub-frontend:latest
     ports:
-      - "3000:3000"
-    environment:
-      - REACT_APP_BACKEND_URL=http://localhost:8080
-
+      - "80:80"
+    depends_on:
+      - backend

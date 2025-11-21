@@ -1,41 +1,14 @@
 version: "3.9"
-
 services:
   backend:
-    image: "${DOCKERHUB_USERNAME}/thesharehub-backend:latest"
-    container_name: sharehub-backend
-    restart: unless-stopped
+    image: mirela28/thesharehub-backend:latest
     ports:
       - "8080:8080"
-    depends_on:
-      - db
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: "${MYSQL_USER}"
-      SPRING_DATASOURCE_PASSWORD: "${MYSQL_PASSWORD}"
 
   frontend:
-    image: "${DOCKERHUB_USERNAME}/thesharehub-frontend:latest"
-    container_name: sharehub-frontend
-    restart: unless-stopped
+    image: mirela28/thesharehub-frontend:latest
     ports:
-      - "3000:80"
-
-  db:
-    image: mysql:8.0
-    container_name: sharehub-db
-    restart: unless-stopped
+      - "3000:3000"
     environment:
-      MYSQL_DATABASE: "${MYSQL_DATABASE}"
-      MYSQL_USER: "${MYSQL_USER}"
-      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
-      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
-    ports:
-      - "3307:3306"
-    volumes:
-      - db_data:/var/lib/mysql
-
-volumes:
-  db_data:
-
+      - REACT_APP_BACKEND_URL=http://localhost:8080
 

@@ -54,10 +54,16 @@ jobs:
       - name: Run integration tests
         run: ./gradlew integrationTest
 
-      - name: Start Backend
+      # Build the backend jar
+      - name: Build backend jar
+        run: ./gradlew clean build -x test
+
+# Start backend in background
+      - name: Start backend server
         run: |
-          nohup ./gradlew bootRun & 
+          nohup java -jar build/libs/*.jar &
           npx wait-on http://localhost:8080
+
 
       # Build & push backend Docker image
       - name: Build & push backend Docker image

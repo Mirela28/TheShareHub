@@ -1,4 +1,4 @@
-FROM gradle:8.6-jdk21 AS builder
+FROM gradle:8.14.3-jdk24 AS builder
 WORKDIR /home/gradle/project
 
 COPY gradlew .
@@ -9,7 +9,7 @@ COPY src ./src
 
 RUN chmod +x ./gradlew && ./gradlew bootJar -x test
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:24-jre-alpine
 WORKDIR /app
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup

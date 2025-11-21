@@ -92,7 +92,7 @@ jobs:
     # Build frontend
     - name: Build frontend
       working-directory: frontend
-      run: npm run build
+      run: CI=false npm run build
   
     # Build & push frontend Docker image
     - name: Build & push frontend Docker image

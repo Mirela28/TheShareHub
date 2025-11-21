@@ -71,34 +71,42 @@ jobs:
       contents: read
 
     steps:
-    # Fetch frontend repo
+  # Fetch frontend repo
     - uses: actions/checkout@v4
       with:
         repository: Mirela28/thesharehub-frontend
-        ref: master 
+        ref: master
         path: frontend
 
-    # Node.js 22
+  # Node.js 22
     - name: Set up Node
       uses: actions/setup-node@v4
       with:
         node-version: 22
 
-    # Install dependencies
+  # Install dependencies
     - name: Install dependencies
       working-directory: frontend
       run: npm install
 
-    # Cypress tests
-    - name: Run Cypress tests
-      working-directory: frontend
-      run: npx cypress run
-
-    # Build frontend
+  # Build frontend
     - name: Build frontend
       working-directory: frontend
       run: npm run build
 
+  # Serve frontend and wait for it
+    - name: Serve frontend
+      working-directory: frontend
+      run: |
+        npm install -g serve wait-on
+        npx serve -s build -l 3000 &
+        npx wait-on http://localhost:3000
+
+    # Run Cypress tests
+    - name: Run Cypress tests
+      working-directory: frontend
+      run: npx cypress run
+  
     # Build & push frontend Docker image
     - name: Build & push frontend Docker image
       uses: mr-smithers-excellent/docker-build-push@v6
@@ -110,5 +118,6 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
         tags: latest
-
-
+  
+  
+  

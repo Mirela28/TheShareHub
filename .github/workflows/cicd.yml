@@ -98,8 +98,8 @@ jobs:
     - name: Build & push frontend Docker image
       uses: mr-smithers-excellent/docker-build-push@v6
       with:
-        context: frontend
-        file: frontend/Dockerfile
+        directory: frontend
+        dockerfile: frontend/Dockerfile
         image: mirela28/thesharehub-frontend
         registry: docker.io
         username: ${{ secrets.DOCKER_USERNAME }}

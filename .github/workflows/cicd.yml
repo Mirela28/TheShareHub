@@ -55,9 +55,8 @@ jobs:
         run: ./gradlew integrationTest
 
       - name: Start Backend
-        working-directory: backend
         run: |
-          nohup ./mvnw spring-boot:run &
+          nohup ./gradlew bootRun & 
           npx wait-on http://localhost:8080
 
       # Build & push backend Docker image

@@ -27,6 +27,9 @@ public class RentEntity {
     @ManyToOne
     @JoinColumn(name = "rentier_id")
     private UserEntity rentier;
+    @ManyToOne
+    @JoinColumn(name = "requester_id")
+    private UserEntity requester;
     @Enumerated(EnumType.STRING)
     private RentStatus status;
 }

@@ -12,6 +12,7 @@ public interface RentDtoMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "item", ignore = true)
     @Mapping(target = "rentier", ignore = true)
+    @Mapping(target = "requester", ignore = true)
     @Mapping(target = "status", ignore = true)
     Rent toDomainfromRentCreateDTO(RentCreateDTO rentCreateDTO);
 

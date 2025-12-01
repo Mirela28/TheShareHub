@@ -20,4 +20,5 @@ public class RentCreateDTO {
     @FutureOrPresent(message = "End date cannot be in the past")
     private LocalDateTime endDate;
     private Long itemId;
+    private Long requesterId;
 }

@@ -22,4 +22,5 @@ public class RentDTO {
     private ItemDTO item;
     private UserDTO rentier;
     private RentStatus status;
+    private UserDTO requester;
 }

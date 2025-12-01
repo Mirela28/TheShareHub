@@ -1,0 +1,1 @@
+ALTER TABLE `rent` ADD COLUMN `requester_id` BIGINT NOT NULL;

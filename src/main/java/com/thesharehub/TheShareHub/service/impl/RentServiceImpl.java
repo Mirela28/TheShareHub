@@ -17,6 +17,7 @@ import com.thesharehub.TheShareHub.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -40,12 +41,47 @@ public class RentServiceImpl implements RentService {
                 new NoSuchElementException("Owner with id " + item.getOwner().getId() + " not found")
         );
 
+        var requesterOptional = userService.findById(rentCreateDTO.getRequesterId());
+        User requester = requesterOptional.orElseThrow(() ->
+                new NoSuchElementException("Owner with id " + item.getOwner().getId() + " not found")
+        );
+
         Rent rent = mapper.toDomainfromRentCreateDTO(rentCreateDTO);
         rent.setRentier(rentier);
+        rent.setRequester(requester);
         rent.setItem(item);
         rent.setStatus(RentStatus.PENDING);
 
         Rent savedRent = rentRepository.save(rent);
         return mapper.toDTO(savedRent);
     }
+
+    @Override
+    public List<RentDTO> getReceivedRequests(Long userId) {
+        List<Rent> receivedRequests= rentRepository.getReceivedRequests(userId);
+
+        return receivedRequests.stream()
+                .map(mapper::toDTO)
+                .toList();
+    }
+
+    @Override
+    public List<RentDTO> getSentRequests(Long userId) {
+        List<Rent> sentRequests= rentRepository.getSentRequests(userId);
+
+        return sentRequests.stream()
+                .map(mapper::toDTO)
+                .toList();
+    }
+
+    @Override
+    public RentDTO updateStatus(Long rentId, String newStatus) {
+        Rent rent = rentRepository.findById(rentId);
+        rent.setStatus(RentStatus.valueOf(newStatus));
+
+        Rent updatedRent = rentRepository.save(rent);
+        return mapper.toDTO(updatedRent);
+    }
+
+
 }

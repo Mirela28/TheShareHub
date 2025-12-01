@@ -17,5 +17,6 @@ public class Rent {
     private LocalDateTime endDate;
     private Item item;
     private User rentier;
+    private User requester;
     private RentStatus status;
 }

@@ -1,12 +1,9 @@
 package com.thesharehub.TheShareHub.controller;
 
-import com.thesharehub.TheShareHub.dtos.UpdateUserDTO;
-import com.thesharehub.TheShareHub.dtos.UserDTO;
+import com.thesharehub.TheShareHub.dtos.*;
 import com.thesharehub.TheShareHub.model.User;
 import com.thesharehub.TheShareHub.service.UserService;
 import com.thesharehub.TheShareHub.utils.JwtUtil;
-import com.thesharehub.TheShareHub.dtos.LogInDTO;
-import com.thesharehub.TheShareHub.dtos.SignUpDTO;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -19,6 +16,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -149,6 +148,17 @@ public class UserController {
         } catch (IllegalArgumentException ex){
             return ResponseEntity.badRequest().body(List.of(ex.getMessage()));
         }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable Long id) {
+        Optional<User> user = userService.findById(id);
+        if(user.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(user.get());
+
     }
 
 }

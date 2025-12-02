@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,8 @@ import java.util.List;
 public class RentController {
 
     private RentService rentService;
+
+    private final SimpMessagingTemplate messagingTemplate;
 
     @PostMapping
     public ResponseEntity<?> createRent(@Valid @RequestBody RentCreateDTO rentCreateDTO) {
@@ -69,6 +72,12 @@ public class RentController {
     @PutMapping
     public ResponseEntity<?> updateStatus(@RequestBody UpdateRentDTO updateRentDTO) {
         RentDTO updatedRent = rentService.updateStatus(updateRentDTO.getId(), updateRentDTO.getStatus());
+
+        messagingTemplate.convertAndSend(
+                "/topic/rents/" + updateRentDTO.getId(),
+                updatedRent
+        );
+
         return ResponseEntity.status(HttpStatus.OK).body(updatedRent);
     }
 }

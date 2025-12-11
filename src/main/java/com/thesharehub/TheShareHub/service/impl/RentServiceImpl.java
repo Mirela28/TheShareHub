@@ -1,6 +1,7 @@
 package com.thesharehub.TheShareHub.service.impl;
 
 import com.thesharehub.TheShareHub.dtos.ItemDTO;
+import com.thesharehub.TheShareHub.dtos.PaginationDTO;
 import com.thesharehub.TheShareHub.dtos.RentCreateDTO;
 import com.thesharehub.TheShareHub.dtos.RentDTO;
 import com.thesharehub.TheShareHub.mapper.ItemDtoMapper;
@@ -15,6 +16,8 @@ import com.thesharehub.TheShareHub.service.ItemService;
 import com.thesharehub.TheShareHub.service.RentService;
 import com.thesharehub.TheShareHub.service.UserService;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -57,21 +60,21 @@ public class RentServiceImpl implements RentService {
     }
 
     @Override
-    public List<RentDTO> getReceivedRequests(Long userId) {
-        List<Rent> receivedRequests= rentRepository.getReceivedRequests(userId);
+    public Page<RentDTO> getReceivedRequests(Long userId, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
 
-        return receivedRequests.stream()
-                .map(mapper::toDTO)
-                .toList();
+        Page<Rent> receivedRequests= rentRepository.getReceivedRequests(userId, pageRequest);
+
+        return receivedRequests.map(mapper::toDTO);
     }
 
     @Override
-    public List<RentDTO> getSentRequests(Long userId) {
-        List<Rent> sentRequests= rentRepository.getSentRequests(userId);
+    public Page<RentDTO> getSentRequests(Long userId, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
 
-        return sentRequests.stream()
-                .map(mapper::toDTO)
-                .toList();
+        Page<Rent> sentRequests= rentRepository.getSentRequests(userId, pageRequest);
+
+        return sentRequests.map(mapper::toDTO);
     }
 
     @Override

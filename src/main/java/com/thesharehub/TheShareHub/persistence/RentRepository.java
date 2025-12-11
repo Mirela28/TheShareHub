@@ -2,6 +2,8 @@ package com.thesharehub.TheShareHub.persistence;
 
 import com.thesharehub.TheShareHub.entities.RentEntity;
 import com.thesharehub.TheShareHub.model.Rent;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,12 +19,12 @@ public interface RentRepository extends JpaRepository<RentEntity,Long> {
         WHERE (r.rentier.id = :rentierId)
         ORDER BY r.id DESC
 """)
-    List<RentEntity> getReceivedRequests(@Param("rentierId") Long userId);
+    Page<RentEntity> getReceivedRequests(@Param("rentierId") Long userId, Pageable pageable);
 
     @Query("""
         SELECT r FROM RentEntity r
         WHERE (r.requester.id = :requesterId)
         ORDER BY r.id DESC
 """)
-    List<RentEntity> getSentRequests(@Param("requesterId") Long userId);
+    Page<RentEntity> getSentRequests(@Param("requesterId") Long userId, Pageable pageable);
 }

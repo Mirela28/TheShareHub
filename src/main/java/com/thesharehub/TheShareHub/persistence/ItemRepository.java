@@ -1,6 +1,7 @@
 package com.thesharehub.TheShareHub.persistence;
 
 import com.thesharehub.TheShareHub.entities.ItemEntity;
+import com.thesharehub.TheShareHub.entities.RentEntity;
 import com.thesharehub.TheShareHub.model.Category;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,4 +34,20 @@ public interface ItemRepository extends JpaRepository<ItemEntity,Long> {
             @Param("maxPrice") BigDecimal maxPrice,
             Pageable pageable
     );
+
+    @Query("""
+        SELECT i from ItemEntity i
+        JOIN RentEntity r ON r.item.id = i.id
+            WHERE r.requester.id = :userId
+            AND r.status IN ('APPROVED', 'ONGOING', 'COMPLETED')
+            ORDER BY r.startDate DESC
+""")
+    Page<ItemEntity> getUserRentedItems(@Param("userId") Long userId, Pageable pageable);
+
+    @Query("""
+        SELECT i from ItemEntity i
+            WHERE i.owner.id = :userId
+""")
+    Page<ItemEntity> getUserOfferedItems(@Param("userId") Long userId, Pageable pageable);
+
 }

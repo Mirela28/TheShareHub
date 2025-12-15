@@ -49,7 +49,7 @@ public class RentServiceImpl implements RentService {
                 new NoSuchElementException("Owner with id " + item.getOwner().getId() + " not found")
         );
 
-        if(isRentValid(rentCreateDTO.getRequesterId())) {
+        if(isRentValid(rentCreateDTO)) {
 
             Rent rent = mapper.toDomainfromRentCreateDTO(rentCreateDTO);
             rent.setRentier(rentier);
@@ -64,11 +64,18 @@ public class RentServiceImpl implements RentService {
     }
 
     @Override
-    public boolean isRentValid(Long requesterId){
-        int currentRentsCount = rentRepository.getCurrentRentsCount(requesterId);
+    public boolean isRentValid(RentCreateDTO rent){
+        int currentRentsCount = rentRepository.getCurrentRentsCount(rent.getRequesterId());
 
         if(currentRentsCount >= 5){
             throw new IllegalStateException("You reached the limit of 5 rents. Wait for owner responses or completion for new requests.");
+        }
+
+        List<DateRangeDTO> unavailableDateRanges = getApprovedRentDates(rent.getItemId());
+        for(DateRangeDTO dateRange : unavailableDateRanges){
+            if(rent.getStartDate().isBefore(dateRange.getEndDate()) && rent.getEndDate().isAfter(dateRange.getStartDate())){
+                throw new IllegalStateException("There are unavailable dates for this item within the chosen range");
+            }
         }
 
         return true;

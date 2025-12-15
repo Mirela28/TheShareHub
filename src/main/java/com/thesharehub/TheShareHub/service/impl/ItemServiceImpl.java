@@ -12,6 +12,7 @@ import com.thesharehub.TheShareHub.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -96,5 +97,23 @@ public class ItemServiceImpl implements ItemService {
         itemDTO.setOwnerEmail(ownerEmail);
 
         return itemDTO;
+    }
+
+    @Override
+    public Page<ItemDTO> getUserRentedItems(Long userId, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        Page<Item> userRentedItems = itemRepository.getUserRentedItems(userId, pageRequest);
+
+        return userRentedItems.map(mapper::toDTO);
+    }
+
+    @Override
+    public Page<ItemDTO> getUserOfferedItems(Long userId, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        Page<Item> userRentedItems = itemRepository.getUserOfferedItems(userId, pageRequest);
+
+        return userRentedItems.map(mapper::toDTO);
     }
 }

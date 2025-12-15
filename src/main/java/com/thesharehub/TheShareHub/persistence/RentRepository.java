@@ -59,4 +59,6 @@ public interface RentRepository extends JpaRepository<RentEntity,Long> {
             AND r.status = 'APPROVED'
 """)
     List<RentEntity> getApprovedRents(@Param("itemId") Long itemId);
+
+
 }

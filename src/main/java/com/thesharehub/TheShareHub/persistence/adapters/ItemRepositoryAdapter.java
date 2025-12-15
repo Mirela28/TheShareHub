@@ -46,4 +46,18 @@ public class ItemRepositoryAdapter {
         return mapper.toDomain(itemEntity);
     }
 
+    public Page<Item> getUserRentedItems(Long userId, Pageable pageable) {
+
+        Page<ItemEntity> entities = itemRepository.getUserRentedItems(userId, pageable);
+
+        return entities.map(mapper::toDomain);
+    }
+
+    public Page<Item> getUserOfferedItems(Long userId, Pageable pageable) {
+
+        Page<ItemEntity> entities = itemRepository.getUserOfferedItems(userId, pageable);
+
+        return entities.map(mapper::toDomain);
+    }
+
 }

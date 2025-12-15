@@ -16,6 +16,8 @@ public interface RentService {
     RentDTO updateStatus(Long rentId, String newStatus);
     void updateStatusAutomatic(Rent rent);
     RentStatus resolveStatus(Rent rent);
-    boolean isRentValid(Long ownerId);
+
+    boolean isRentValid(RentCreateDTO rent);
+
     List<DateRangeDTO> getApprovedRentDates(Long itemId);
 }

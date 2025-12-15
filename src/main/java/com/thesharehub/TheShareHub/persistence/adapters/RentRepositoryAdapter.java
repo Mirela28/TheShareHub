@@ -26,6 +26,10 @@ public class RentRepositoryAdapter {
         return mapper.toDomain(savedRent);
     }
 
+    public int getCurrentRentsCount(Long requesterId) {
+        return rentRepository.getCurrentRentsCount(requesterId);
+    }
+
     public Page<Rent> getReceivedRequests(Long userId, Pageable pageable) {
         Page<RentEntity> receivedRequests = rentRepository.getReceivedRequests(userId, pageable);
 
@@ -46,5 +50,22 @@ public class RentRepositoryAdapter {
         }
 
         return mapper.toDomain(rentEntity);
+    }
+
+    public void rejectRentsWithConflictingDates(Rent rent) {
+        rentRepository.rejectRentsWithConflictingDates(
+                rent.getId(),
+                rent.getItem().getId(),
+                rent.getStartDate(),
+                rent.getEndDate()
+        );
+    }
+
+    public List<Rent> getApprovedRents(Long itemId) {
+        List<RentEntity> approvedRents = rentRepository.getApprovedRents(itemId);
+
+        return approvedRents.stream().
+                map(mapper::toDomain)
+                .toList();
     }
 }

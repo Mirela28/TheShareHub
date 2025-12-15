@@ -1,9 +1,6 @@
 package com.thesharehub.TheShareHub.controller;
 
-import com.thesharehub.TheShareHub.dtos.PaginationDTO;
-import com.thesharehub.TheShareHub.dtos.RentCreateDTO;
-import com.thesharehub.TheShareHub.dtos.RentDTO;
-import com.thesharehub.TheShareHub.dtos.UpdateRentDTO;
+import com.thesharehub.TheShareHub.dtos.*;
 import com.thesharehub.TheShareHub.model.RentStatus;
 import com.thesharehub.TheShareHub.service.RentService;
 import jakarta.validation.Valid;
@@ -83,5 +80,12 @@ public class RentController {
         );
 
         return ResponseEntity.status(HttpStatus.OK).body(updatedRent);
+    }
+
+    @GetMapping("/approvedrents/{itemId}")
+    public ResponseEntity<?> getApprovedRentDates(@PathVariable Long itemId) {
+        List<DateRangeDTO> approvedDates = rentService.getApprovedRentDates(itemId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(approvedDates);
     }
 }

@@ -116,7 +116,27 @@ public class RentServiceImpl implements RentService {
     @Transactional
     public RentDTO updateStatus(Long rentId, String newStatus) {
         Rent rent = rentRepository.findById(rentId);
-        rent.setStatus(RentStatus.valueOf(newStatus));
+        RentStatus newStatusEnum = RentStatus.valueOf(newStatus);
+        RentStatus currentStatus = rent.getStatus();
+
+        if(currentStatus == RentStatus.CANCELLED
+                || currentStatus == RentStatus.REJECTED
+                || currentStatus == RentStatus.ONGOING
+                || currentStatus == RentStatus.COMPLETED
+        ){
+            throw new IllegalStateException("The rent with id " + rentId + " can not be modified in status " + currentStatus);
+        }
+        if(currentStatus == RentStatus.PENDING && newStatusEnum != RentStatus.APPROVED && newStatusEnum != RentStatus.REJECTED){
+            throw new IllegalStateException("The rent with id " + rentId + " is not pending");
+        }
+        if(currentStatus != RentStatus.PENDING && newStatusEnum == RentStatus.PENDING){
+            throw new IllegalStateException("The rent with id " + rentId + " can not be changed to pending");
+        }
+        if(currentStatus != RentStatus.APPROVED && newStatusEnum == RentStatus.CANCELLED){
+            throw new IllegalStateException("The rent with id " + rentId + " can not be changed to cancelled");
+        }
+
+        rent.setStatus(newStatusEnum);
 
         if(rent.getStatus() == RentStatus.APPROVED) {
             rentRepository.rejectRentsWithConflictingDates(rent);

@@ -116,4 +116,11 @@ public class ItemServiceImpl implements ItemService {
 
         return userRentedItems.map(mapper::toDTO);
     }
+
+    @Override
+    public Page<ItemDTO> getTop3RentedItems() {
+        Page<Item> top3RentedItems = itemRepository.getTop3RentedItems();
+
+        return top3RentedItems.map(mapper::toDTO);
+    }
 }

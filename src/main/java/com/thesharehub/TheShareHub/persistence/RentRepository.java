@@ -1,7 +1,10 @@
 package com.thesharehub.TheShareHub.persistence;
 
+import com.thesharehub.TheShareHub.entities.ItemEntity;
 import com.thesharehub.TheShareHub.entities.RentEntity;
+import com.thesharehub.TheShareHub.model.Item;
 import com.thesharehub.TheShareHub.model.Rent;
+import com.thesharehub.TheShareHub.model.RentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -60,5 +63,14 @@ public interface RentRepository extends JpaRepository<RentEntity,Long> {
 """)
     List<RentEntity> getApprovedRents(@Param("itemId") Long itemId);
 
+
+    @Query("""
+        SELECT r.item
+        FROM RentEntity r
+        WHERE r.status IN (:statuses)
+        GROUP BY r.item
+        ORDER BY COUNT(r) DESC
+""")
+    Page<ItemEntity> getTop3RentedItems(@Param("statuses") List<RentStatus> statuses, Pageable pageable);
 
 }

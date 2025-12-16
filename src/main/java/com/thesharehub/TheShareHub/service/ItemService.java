@@ -13,4 +13,5 @@ public interface ItemService {
     ItemDTO findById(long id);
     Page<ItemDTO> getUserRentedItems(Long userId, int page, int size);
     Page<ItemDTO> getUserOfferedItems(Long userId, int page, int size);
+    Page<ItemDTO> getTop3RentedItems();
 }

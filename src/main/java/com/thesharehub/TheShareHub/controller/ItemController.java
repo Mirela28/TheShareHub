@@ -66,7 +66,7 @@ public class ItemController {
         }
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<?> getItemById(@PathVariable Long id) {
         try {
             ItemDTO itemDTO = itemService.findById(id);
@@ -113,5 +113,12 @@ public class ItemController {
 
 
         return ResponseEntity.status(HttpStatus.OK).body(userOfferedItems);
+    }
+
+    @GetMapping("/top-rentals")
+    public ResponseEntity<?> getTop3RentedItems() {
+        Page<ItemDTO> top3RentedItems = itemService.getTop3RentedItems();
+
+        return ResponseEntity.status(HttpStatus.OK).body(top3RentedItems);
     }
 }

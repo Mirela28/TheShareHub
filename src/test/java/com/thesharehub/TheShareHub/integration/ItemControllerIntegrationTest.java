@@ -2,14 +2,15 @@ package com.thesharehub.TheShareHub.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thesharehub.TheShareHub.TheShareHubApplication;
+import com.thesharehub.TheShareHub.config.TestSecurityConfig;
 import com.thesharehub.TheShareHub.dtos.ItemFilterDTO;
 import com.thesharehub.TheShareHub.entities.ItemEntity;
 import com.thesharehub.TheShareHub.entities.UserEntity;
 import com.thesharehub.TheShareHub.model.Category;
 import com.thesharehub.TheShareHub.persistence.ItemRepository;
 import com.thesharehub.TheShareHub.persistence.UserRepository;
-import com.thesharehub.TheShareHub.utils.JwtUtil;
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,34 +19,28 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.math.BigDecimal;
+import java.util.List;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
-        classes = TheShareHubApplication.class
-)
-@AutoConfigureMockMvc
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-@TestPropertySource(
-        locations = "classpath:application-test.properties"
-)
+@TestPropertySource(locations = "classpath:application-test.properties")
 @Transactional
-public class ItemControllerIntegrationTest {
+class ItemControllerIntegrationTest {
+
     @Autowired
     private MockMvc mvc;
 
@@ -58,11 +53,33 @@ public class ItemControllerIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private UserEntity user;
 
-    Long savedUserId;
-    UserEntity user;
+    // -------------------------------------------------
+    // Security helper (same as Rent tests)
+    // -------------------------------------------------
+
+    private void authenticateAs(Long userId) {
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken(
+                        userId.toString(),
+                        null,
+                        List.of(() -> "ROLE_USER")
+                );
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(auth);
+        SecurityContextHolder.setContext(context);
+    }
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
+    // -------------------------------------------------
+    // Test setup
+    // -------------------------------------------------
 
     @BeforeEach
     void setup() {
@@ -73,20 +90,32 @@ public class ItemControllerIntegrationTest {
         user.setPhone("0612345678");
         user.setPassword("Password1!");
         user.setCity("Amsterdam");
-        savedUserId = userRepository.save(user).getId();
+        user = userRepository.save(user);
     }
 
+    // -------------------------------------------------
+    // POST /items (invalid)
+    // -------------------------------------------------
+
     @Test
-    @WithMockUser(username = "1")
     void createItem_invalidData_returns400() throws Exception {
-        MockMultipartFile image = new MockMultipartFile(
-                "image", "bike.png", "image/png", "dummy-image".getBytes()
-        );
-        MockMultipartFile name = new MockMultipartFile("name", "", "text/plain", "B".getBytes());
-        MockMultipartFile description = new MockMultipartFile("description", "", "text/plain",
-                "Too short".getBytes());
-        MockMultipartFile price = new MockMultipartFile("price", "", "text/plain", "-5".getBytes());
-        MockMultipartFile category = new MockMultipartFile("category", "", "text/plain", "Transport".getBytes());
+
+        authenticateAs(user.getId());
+
+        MockMultipartFile image =
+                new MockMultipartFile("image", "bike.png", "image/png", "img".getBytes());
+
+        MockMultipartFile name =
+                new MockMultipartFile("name", "", "text/plain", "B".getBytes());
+
+        MockMultipartFile description =
+                new MockMultipartFile("description", "", "text/plain", "Too short".getBytes());
+
+        MockMultipartFile price =
+                new MockMultipartFile("price", "", "text/plain", "-5".getBytes());
+
+        MockMultipartFile category =
+                new MockMultipartFile("category", "", "text/plain", "TRANSPORT".getBytes());
 
         mvc.perform(
                         multipart("/items")
@@ -99,8 +128,40 @@ public class ItemControllerIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    // -------------------------------------------------
+    // POST /items (valid)
+    // -------------------------------------------------
+
+    @Test
+    void createItem_shallReturn201_andItem() throws Exception {
+
+        authenticateAs(user.getId());
+
+        MockMultipartFile image =
+                new MockMultipartFile("image", "bike.png", "image/png", "img".getBytes());
+
+        mvc.perform(
+                        multipart("/items")
+                                .file(image)
+                                .param("name", "Bike")
+                                .param("description", "Very nice city bike in excellent condition")
+                                .param("conditions", "Good")
+                                .param("category", "TRANSPORT")
+                                .param("price", "15")
+                )
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.name").value("Bike"))
+                .andExpect(jsonPath("$.ownerId").value(user.getId()));
+    }
+
+    // -------------------------------------------------
+    // POST /items/search
+    // -------------------------------------------------
+
     @Test
     void searchItems_shallReturnPage() throws Exception {
+
         ItemFilterDTO filters = new ItemFilterDTO();
         filters.setQuery("bike");
         filters.setCategory("TRANSPORT");
@@ -109,66 +170,73 @@ public class ItemControllerIntegrationTest {
         filters.setPage(0);
         filters.setSize(10);
 
-        mvc.perform(
-                MockMvcRequestBuilders.post("/items/search")
+        mvc.perform(post("/items/search")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(filters))
-                )
+                        .content(mapper.writeValueAsString(filters)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
     }
 
+    // -------------------------------------------------
+    // GET /items/{id}
+    // -------------------------------------------------
+
     @Test
     void getItemById_shallReturnItem() throws Exception {
-        UserEntity ownerEntity = userRepository.findById(savedUserId).get();
 
         ItemEntity item = new ItemEntity();
         item.setName("Bike");
-        item.setDescription("A very nice bike");
+        item.setDescription("Nice bike");
         item.setConditions("Good");
         item.setCategory(Category.TRANSPORT);
         item.setPrice(BigDecimal.valueOf(15));
-        item.setOwner(ownerEntity);
-        ItemEntity savedItem = itemRepository.save(item);
+        item.setOwner(user);
+        item = itemRepository.save(item);
 
-        mvc.perform(MockMvcRequestBuilders.get("/items/" + savedItem.getId())
-                        .contentType(MediaType.APPLICATION_JSON))
+        mvc.perform(get("/items/{id}", item.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(savedItem.getId()))
+                .andExpect(jsonPath("$.id").value(item.getId()))
                 .andExpect(jsonPath("$.name").value("Bike"))
-                .andExpect(jsonPath("$.description").value("A very nice bike"))
-                .andExpect(jsonPath("$.conditions").value("Good"))
-                .andExpect(jsonPath("$.price").value(15))
-                .andExpect(jsonPath("$.category").value("TRANSPORT"))
-                .andExpect(jsonPath("$.ownerId").value(savedUserId));
+                .andExpect(jsonPath("$.ownerId").value(user.getId()));
     }
 
-//    @Test
-//    void createItem_shallReturnStatus201_AndReturnItem() throws Exception {
-//        MockMultipartFile image = new MockMultipartFile(
-//                "image",
-//                "item.jpg",
-//                "image/jpeg",
-//                "dummy image content".getBytes());
-//
-//        mvc.perform(multipart("/items")
-//                        .file(image)
-//                        .contentType(MediaType.MULTIPART_FORM_DATA)
-//                        .param("name", "Bike")
-//                        .param("description", "A very nice bike")
-//                        .param("conditions", "Good")
-//                        .param("category", "TRANSPORT")
-//                        .param("price", "10.5")
-//                        .with(user(String.valueOf(savedUserId)).roles("USER"))
-//                        .with(csrf())
-//                )
-//                .andExpect(status().isCreated())
-//                .andExpect(jsonPath("$.id").exists())
-//                .andExpect(jsonPath("$.name").value("Bike"))
-//                .andExpect(jsonPath("$.description").value("A very nice bike"))
-//                .andExpect(jsonPath("$.conditions").value("Good"))
-//                .andExpect(jsonPath("$.price").value(10.5))
-//                .andExpect(jsonPath("$.category").value("TRANSPORT"))
-//                .andExpect(jsonPath("$.ownerId").value(savedUserId));
-//    }
+    // -------------------------------------------------
+    // GET /items/user/offered-items
+    // -------------------------------------------------
+
+    @Test
+    void getUserOfferedItems_shallReturnPage() throws Exception {
+
+        authenticateAs(user.getId());
+
+        mvc.perform(get("/items/user/offered-items"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").exists());
+    }
+
+    // -------------------------------------------------
+    // GET /items/user/rented-items
+    // -------------------------------------------------
+
+    @Test
+    void getUserRentedItems_shallReturnPage() throws Exception {
+
+        authenticateAs(user.getId());
+
+        mvc.perform(get("/items/user/rented-items"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").exists());
+    }
+
+    // -------------------------------------------------
+    // GET /items/top-rentals
+    // -------------------------------------------------
+
+    @Test
+    void getTop3RentedItems_shallReturnPage() throws Exception {
+
+        mvc.perform(get("/items/top-rentals"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").exists());
+    }
 }

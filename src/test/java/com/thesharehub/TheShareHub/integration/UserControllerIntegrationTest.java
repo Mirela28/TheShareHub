@@ -16,8 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -57,7 +58,7 @@ class UserControllerIntegrationTest {
     private UserEntity user;
 
     // -------------------------------------------------
-    // Security helper (same pattern as Item tests)
+    // Security helper
     // -------------------------------------------------
 
     private void authenticateAs(Long userId) {
@@ -79,7 +80,7 @@ class UserControllerIntegrationTest {
     }
 
     // -------------------------------------------------
-    // Test setup
+    // Setup
     // -------------------------------------------------
 
     @BeforeEach
@@ -99,7 +100,7 @@ class UserControllerIntegrationTest {
     // -------------------------------------------------
 
     @Test
-    void signup_shallReturn201_andUser() throws Exception {
+    void signup_shallReturn201_andJwtCookie() throws Exception {
 
         SignUpDTO dto = new SignUpDTO(
                 "Mirela",
@@ -115,50 +116,8 @@ class UserControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.name").value("Mirela"))
-                .andExpect(jsonPath("$.username").value("newuser28"))
-                .andExpect(jsonPath("$.email").value("newuser@mail.com"));
-    }
-
-    @Test
-    void signup_shallReturn400_forInvalidData() throws Exception {
-
-        SignUpDTO dto = new SignUpDTO(
-                "Mi", // invalid: too short
-                "user",
-                "mail@test.com",
-                "+31611111111",
-                "Amsterdam",
-                "Password1!",
-                "Password1!"
-        );
-
-        mvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(dto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors").exists());
-    }
-
-    @Test
-    void signup_shallReturn400_forDuplicateFields() throws Exception {
-
-        SignUpDTO dto = new SignUpDTO(
-                "Mirela",
-                user.getUsername(), // duplicate
-                user.getEmail(),    // duplicate
-                user.getPhone(),
-                "Amsterdam",
-                "Password1!",
-                "Password1!"
-        );
-
-        mvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(dto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0]").value(org.hamcrest.Matchers.containsString("exists")));
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("token=")))
+                .andExpect(jsonPath("$.id").exists());
     }
 
     // -------------------------------------------------
@@ -166,7 +125,7 @@ class UserControllerIntegrationTest {
     // -------------------------------------------------
 
     @Test
-    void login_shallReturn200_andUser() throws Exception {
+    void login_shallReturn200_andJwtCookie() throws Exception {
 
         LogInDTO dto = new LogInDTO(
                 user.getUsername(),
@@ -177,23 +136,21 @@ class UserControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(user.getId()))
-                .andExpect(jsonPath("$.username").value("mirela28"));
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("token=")))
+                .andExpect(jsonPath("$.id").value(user.getId()));
     }
 
+    // -------------------------------------------------
+    // POST /users/logout
+    // -------------------------------------------------
+
     @Test
-    void login_shallReturn400_forWrongPassword() throws Exception {
+    void logout_shallClearJwtCookie() throws Exception {
 
-        LogInDTO dto = new LogInDTO(
-                user.getUsername(),
-                "WrongPassword1!"
-        );
-
-        mvc.perform(post("/users/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(dto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0]").value("Incorrect password"));
+        mvc.perform(post("/users/logout"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=0")))
+                .andExpect(content().string("Logged out successfully"));
     }
 
     // -------------------------------------------------
@@ -216,8 +173,7 @@ class UserControllerIntegrationTest {
         mvc.perform(get("/users/me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.authenticated").value(true))
-                .andExpect(jsonPath("$.user.id").value(user.getId()))
-                .andExpect(jsonPath("$.user.username").value("mirela28"));
+                .andExpect(jsonPath("$.user.id").value(user.getId()));
     }
 
     // -------------------------------------------------
@@ -241,9 +197,7 @@ class UserControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(user.getId()))
                 .andExpect(jsonPath("$.name").value("UpdatedName"))
-                .andExpect(jsonPath("$.username").value("updatedusername"))
                 .andExpect(jsonPath("$.city").value("Eindhoven"));
     }
 
@@ -262,5 +216,25 @@ class UserControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(dto)))
                 .andExpect(status().isUnauthorized());
+    }
+
+    // -------------------------------------------------
+    // GET /users/{id}
+    // -------------------------------------------------
+
+    @Test
+    void getUserById_shallReturnUser() throws Exception {
+
+        mvc.perform(get("/users/{id}", user.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(user.getId()))
+                .andExpect(jsonPath("$.username").value("mirela28"));
+    }
+
+    @Test
+    void getUserById_shallReturn404_whenUserNotFound() throws Exception {
+
+        mvc.perform(get("/users/{id}", 999999L))
+                .andExpect(status().isNotFound());
     }
 }

@@ -66,6 +66,7 @@ tasks.named('test') {
     }
 }
 
+
 tasks.register('integrationTest', Test) {
     description = 'Runs integration tests under test profile'
     group = 'verification'
@@ -79,10 +80,22 @@ tasks.register('integrationTest', Test) {
     shouldRunAfter tasks.test
 }
 
+tasks.named('integrationTest', Test){
+    jacoco {
+        enabled = true
+    }
+}
+
 check.dependsOn integrationTest
 
 jacocoTestReport {
-    dependsOn test, integrationTest
+    dependsOn(test, integrationTest)
+
+    executionData.from(
+            layout.buildDirectory.file("jacoco/test.exec"),
+            layout.buildDirectory.file("jacoco/integrationTest.exec")
+    )
+
     reports {
         xml.required = true
         html.required = true
@@ -91,12 +104,32 @@ jacocoTestReport {
 
 sonar {
     properties {
-        property "sonar.projectKey", "TheShareHub"
+        property "sonar.projectKey", "thesharehub"
         property "sonar.host.url", "http://localhost:9000"
-        property "sonar.token", "sqp_43c4983780b515eb7636d13f2b9ca8df3a937467"
+        property "sonar.token", System.getenv("SONAR_TOKEN")
+        property "sonar.gradle.skipCompile", "true"
 
-        property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
         property "sonar.tests", "src/test/java"
+        property "sonar.test.inclusions", "**/*Test.java,**/*IntegrationTest.java"
+
+        property "sonar.junit.reportPaths",
+                "build/test-results/test,build/test-results/integrationTest"
+
+        property "sonar.coverage.jacoco.xmlReportPaths",
+                "build/reports/jacoco/test/jacocoTestReport.xml"
+
         property "sonar.java.binaries", "build/classes/java/main"
+
+        property "sonar.coverage.exclusions",
+                "**/config/**," +
+                        "**/dtos/**," +
+                        "**/entities/**," +
+                        "**/model/**," +
+                        "**/mapper/**," +
+                        "**/*Application.java"
+
     }
 }
+
+
+

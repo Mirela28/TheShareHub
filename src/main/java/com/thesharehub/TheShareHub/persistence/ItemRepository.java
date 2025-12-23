@@ -20,12 +20,15 @@ public interface ItemRepository extends JpaRepository<ItemEntity,Long> {
     ItemEntity findById(long id);
 
     @Query("""
-        SELECT i FROM ItemEntity i
-        WHERE (:query IS NULL OR LOWER(i.name) LIKE LOWER(CONCAT('%', :query, '%'))
-            OR LOWER(i.description) LIKE LOWER(CONCAT('%', :query, '%')))
-        AND (:category IS NULL OR i.category = :category)
-        AND (:minPrice IS NULL OR i.price >= :minPrice)
-        AND (:maxPrice IS NULL OR i.price <= :maxPrice)
+    SELECT i FROM ItemEntity i
+    WHERE (
+        :query IS NULL
+        OR LOWER(i.name) LIKE LOWER(CONCAT('%', :query, '%'))
+        OR LOWER(i.description) LIKE LOWER(CONCAT('%', :query, '%'))
+    )
+    AND (:category IS NULL OR i.category = :category)
+    AND (:minPrice IS NULL OR i.price >= :minPrice)
+    AND (:maxPrice IS NULL OR i.price <= :maxPrice)
 """)
     Page<ItemEntity> searchItems(
             @Param("query") String query,
@@ -34,6 +37,7 @@ public interface ItemRepository extends JpaRepository<ItemEntity,Long> {
             @Param("maxPrice") BigDecimal maxPrice,
             Pageable pageable
     );
+
 
     @Query("""
         SELECT i from ItemEntity i

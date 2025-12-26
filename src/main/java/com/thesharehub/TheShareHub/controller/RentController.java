@@ -1,14 +1,14 @@
 package com.thesharehub.TheShareHub.controller;
 
-import com.thesharehub.TheShareHub.dtos.RentCreateDTO;
-import com.thesharehub.TheShareHub.dtos.RentDTO;
-import com.thesharehub.TheShareHub.dtos.UpdateRentDTO;
+import com.thesharehub.TheShareHub.dtos.*;
 import com.thesharehub.TheShareHub.model.RentStatus;
 import com.thesharehub.TheShareHub.service.RentService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -16,12 +16,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@CrossOrigin("http://localhost:3000")
 @RequestMapping("/rents")
 @AllArgsConstructor
 public class RentController {
 
     private RentService rentService;
+
+    private final SimpMessagingTemplate messagingTemplate;
 
     @PostMapping
     public ResponseEntity<?> createRent(@Valid @RequestBody RentCreateDTO rentCreateDTO) {
@@ -39,7 +40,8 @@ public class RentController {
     }
 
     @GetMapping("/receivedrequests")
-    public ResponseEntity<?> getReceivedRequests() {
+    public ResponseEntity<?> getReceivedRequests(@RequestParam(defaultValue = "0") int page,
+                                                 @RequestParam(defaultValue = "5") int size) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated()) {
@@ -48,12 +50,13 @@ public class RentController {
 
         Long userId = Long.valueOf(auth.getName());
 
-        List<RentDTO> receivedRequests = rentService.getReceivedRequests(userId);
+        Page<RentDTO> receivedRequests = rentService.getReceivedRequests(userId, page, size);
         return ResponseEntity.status(HttpStatus.OK).body(receivedRequests);
     }
 
     @GetMapping("/sentrequests")
-    public ResponseEntity<?> getSentRequests() {
+    public ResponseEntity<?> getSentRequests(@RequestParam(defaultValue = "0") int page,
+                                             @RequestParam(defaultValue = "5") int size) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated()) {
@@ -62,13 +65,26 @@ public class RentController {
 
         Long userId = Long.valueOf(auth.getName());
 
-        List<RentDTO> sentRequests = rentService.getSentRequests(userId);
+        Page<RentDTO> sentRequests = rentService.getSentRequests(userId, page, size);
         return ResponseEntity.status(HttpStatus.OK).body(sentRequests);
     }
 
     @PutMapping
     public ResponseEntity<?> updateStatus(@RequestBody UpdateRentDTO updateRentDTO) {
         RentDTO updatedRent = rentService.updateStatus(updateRentDTO.getId(), updateRentDTO.getStatus());
+
+        messagingTemplate.convertAndSend(
+                "/topic/rents/" + updateRentDTO.getId(),
+                updatedRent
+        );
+
         return ResponseEntity.status(HttpStatus.OK).body(updatedRent);
+    }
+
+    @GetMapping("/approvedrents/{itemId}")
+    public ResponseEntity<?> getApprovedRentDates(@PathVariable Long itemId) {
+        List<DateRangeDTO> approvedDates = rentService.getApprovedRentDates(itemId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(approvedDates);
     }
 }

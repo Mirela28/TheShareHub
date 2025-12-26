@@ -11,4 +11,7 @@ public interface ItemService {
     ItemDTO findByName(String name);
     Page<ItemDTO> searchItems(ItemFilterDTO filters);
     ItemDTO findById(long id);
+    Page<ItemDTO> getUserRentedItems(Long userId, int page, int size);
+    Page<ItemDTO> getUserOfferedItems(Long userId, int page, int size);
+    Page<ItemDTO> getTop3RentedItems();
 }

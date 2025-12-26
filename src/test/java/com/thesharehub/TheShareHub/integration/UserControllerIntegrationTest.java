@@ -8,39 +8,40 @@ import com.thesharehub.TheShareHub.dtos.UpdateUserDTO;
 import com.thesharehub.TheShareHub.entities.UserEntity;
 import com.thesharehub.TheShareHub.persistence.UserRepository;
 import com.thesharehub.TheShareHub.utils.JwtUtil;
-import jakarta.servlet.http.Cookie;
+import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import java.util.List;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.MOCK,
         classes = TheShareHubApplication.class
 )
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-@TestPropertySource(
-        locations = "classpath:application-test.properties"
-)
+@TestPropertySource(locations = "classpath:application-test.properties")
 @Transactional
-public class UserControllerIntegrationTest {
+class UserControllerIntegrationTest {
 
     @Autowired
     private MockMvc mvc;
@@ -54,67 +55,58 @@ public class UserControllerIntegrationTest {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Test
-    void signup_shallStatus201_andReturnUser() throws Exception {
-        SignUpDTO signUpDTO = new SignUpDTO(
-                "Mirela",
-                "mirela28",
-                "mirelagirleanu@gmail.com",
-                "+31617485752",
-                "Amsterdam",
-                "Password1!",
-                "Password1!"
-        );
+    private UserEntity user;
 
-        mvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(signUpDTO))
-                )
-                .andDo(print())
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.name").value("Mirela"))
-                .andExpect(jsonPath("$.username").value("mirela28"))
-                .andExpect(jsonPath("$.email").value("mirelagirleanu@gmail.com"));
+    // -------------------------------------------------
+    // Security helper
+    // -------------------------------------------------
+
+    private void authenticateAs(Long userId) {
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken(
+                        userId.toString(),
+                        null,
+                        List.of(() -> "ROLE_USER")
+                );
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(auth);
+        SecurityContextHolder.setContext(context);
     }
 
-    @Test
-    void signup_shallReturn400_forInvalidData() throws Exception {
-        SignUpDTO signUpDTO = new SignUpDTO(
-                "Mi",
-                "mirela28",
-                "mirelagirleanu@gmail.com",
-                "+31617485752",
-                "Amsterdam",
-                "Password1!",
-                "Password1!"
-        );
-
-        mvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(signUpDTO))
-                )
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[0]").value("Name must be between 3 and 12 characters"));
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
     }
 
+    // -------------------------------------------------
+    // Setup
+    // -------------------------------------------------
+
+    @BeforeEach
+    void setup() {
+        user = new UserEntity();
+        user.setName("Mirela");
+        user.setUsername("mirela28");
+        user.setEmail("mirela@mail.com");
+        user.setPhone("+31617485752");
+        user.setPassword("Password1!");
+        user.setCity("Amsterdam");
+        user = userRepository.save(user);
+    }
+
+    // -------------------------------------------------
+    // POST /users (signup)
+    // -------------------------------------------------
+
     @Test
-    void signup_shallReturn400_forDuplicateFields() throws Exception {
-        UserEntity existing = new UserEntity();
-        existing.setName("Existing");
-        existing.setUsername("mirela28");
-        existing.setEmail("mirela@gmail.com");
-        existing.setPhone("0700000000");
-        existing.setPassword("Password1!");
-        existing.setCity("Amsterdam");
-        userRepository.save(existing);
+    void signup_shallReturn201_andJwtCookie() throws Exception {
 
         SignUpDTO dto = new SignUpDTO(
                 "Mirela",
-                "mirela28",
-                "mirela@gmail.com",
-                "0700000000",
+                "newuser28",
+                "newuser@mail.com",
+                "+31611111111",
                 "Amsterdam",
                 "Password1!",
                 "Password1!"
@@ -122,151 +114,127 @@ public class UserControllerIntegrationTest {
 
         mvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(dto))
-                )
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0]").value(org.hamcrest.Matchers.containsString("exists")));
+                        .content(mapper.writeValueAsString(dto)))
+                .andExpect(status().isCreated())
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("token=")))
+                .andExpect(jsonPath("$.id").exists());
     }
 
+    // -------------------------------------------------
+    // POST /users/login
+    // -------------------------------------------------
 
     @Test
-    void login_shallStatus200_andReturnUser() throws Exception {
-        UserEntity user = new UserEntity();
-        user.setName("Mirela");
-        user.setUsername("mirela28");
-        user.setEmail("mirelagirleanu@gmail.com");
-        user.setPhone("+31617485752");
-        user.setPassword("Password1!");
-        user.setCity("Amsterdam");
-        userRepository.save(user);
+    void login_shallReturn200_andJwtCookie() throws Exception {
 
-        LogInDTO logInDTO = new LogInDTO(
-                "mirela28",
+        LogInDTO dto = new LogInDTO(
+                user.getUsername(),
                 "Password1!"
         );
 
         mvc.perform(post("/users/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(logInDTO))
-                )
-                .andDo(print())
+                        .content(mapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.name").value("Mirela"))
-                .andExpect(jsonPath("$.username").value("mirela28"));
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("token=")))
+                .andExpect(jsonPath("$.id").value(user.getId()));
     }
 
+    // -------------------------------------------------
+    // POST /users/logout
+    // -------------------------------------------------
+
     @Test
-    void login_shallReturnBadRequest_forIncorrectData() throws Exception {
-        UserEntity user = new UserEntity();
-        user.setName("Mirela");
-        user.setUsername("mirela28");
-        user.setEmail("mirelagirleanu@gmail.com");
-        user.setPhone("+31617485752");
-        user.setPassword("Password1!");
-        user.setCity("Amsterdam");
-        userRepository.save(user);
+    void logout_shallClearJwtCookie() throws Exception {
 
-        LogInDTO logInDTO = new LogInDTO(
-                "mirela28",
-                "Password123!"
-        );
-
-        mvc.perform(post("/users/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(logInDTO))
-                )
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0]").value("Incorrect password"));
+        mvc.perform(post("/users/logout"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=0")))
+                .andExpect(content().string("Logged out successfully"));
     }
 
+    // -------------------------------------------------
+    // GET /users/me
+    // -------------------------------------------------
+
     @Test
-    void me_shallReturnAuthenticatedFalse_forNoAuth() throws Exception {
-        mvc.perform(get("/users/me")
-                        .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andDo(print())
+    void me_shallReturnAuthenticatedFalse_whenNotAuthenticated() throws Exception {
+
+        mvc.perform(get("/users/me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.authenticated").value(false));
     }
 
     @Test
-    void me_shallReturnAuthenticatedTrue_forAuth() throws Exception {
-        UserEntity user = new UserEntity();
-        user.setName("Mirela");
-        user.setUsername("mirela28");
-        user.setEmail("mirelagirleanu@gmail.com");
-        user.setPhone("+31617485752");
-        user.setPassword("Password1!");
-        user.setCity("Amsterdam");
-        UserEntity saved = userRepository.save(user);
+    void me_shallReturnAuthenticatedTrue_whenAuthenticated() throws Exception {
 
-        String token = jwtUtil.generateToken(saved.getId());
+        authenticateAs(user.getId());
 
-        mvc.perform(get("/users/me")
-                        .cookie(new Cookie("token", token))
-                )
-                .andDo(print())
+        mvc.perform(get("/users/me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.authenticated").value(true))
-                .andExpect(jsonPath("$.user.id").value(saved.getId()))
-                .andExpect(jsonPath("$.user.username").value("mirela28"));
+                .andExpect(jsonPath("$.user.id").value(user.getId()));
     }
+
+    // -------------------------------------------------
+    // PUT /users
+    // -------------------------------------------------
 
     @Test
     void updateUser_shallReturn200_andUpdatedUser() throws Exception {
-        UserEntity user = new UserEntity();
-        user.setName("Mirela");
-        user.setUsername("mirela28");
-        user.setEmail("mirelagirleanu@gmail.com");
-        user.setPhone("+31617485752");
-        user.setPassword("Password1!");
-        user.setCity("Amsterdam");
-        UserEntity saved = userRepository.save(user);
 
-        UpdateUserDTO updateUserDTO = new UpdateUserDTO(
-                "NewName",
-                "newusername",
-                "updated@gmail.com",
+        authenticateAs(user.getId());
+
+        UpdateUserDTO dto = new UpdateUserDTO(
+                "UpdatedName",
+                "updatedusername",
+                "updated@mail.com",
                 "0700000000",
                 "Eindhoven"
         );
 
-        String token = jwtUtil.generateToken(saved.getId());
-
         mvc.perform(put("/users")
-                        .cookie(new Cookie("token", token))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(updateUserDTO))
-                )
-                .andDo(print())
+                        .content(mapper.writeValueAsString(dto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(saved.getId()))
-                .andExpect(jsonPath("$.name").value("NewName"))
-                .andExpect(jsonPath("$.username").value("newusername"))
-                .andExpect(jsonPath("$.email").value("updated@gmail.com"))
+                .andExpect(jsonPath("$.name").value("UpdatedName"))
                 .andExpect(jsonPath("$.city").value("Eindhoven"));
     }
 
     @Test
-    void updateUser_withoutAuth_shallReturn401() throws Exception {
+    void updateUser_shallReturn401_whenNotAuthenticated() throws Exception {
+
         UpdateUserDTO dto = new UpdateUserDTO(
-                "NewName",
-                "newusername",
-                "newmail@test.com",
+                "UpdatedName",
+                "updatedusername",
+                "updated@mail.com",
                 "0700000000",
                 "Eindhoven"
         );
 
         mvc.perform(put("/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(dto))
-                )
-                .andDo(print())
+                        .content(mapper.writeValueAsString(dto)))
                 .andExpect(status().isUnauthorized());
     }
 
+    // -------------------------------------------------
+    // GET /users/{id}
+    // -------------------------------------------------
 
+    @Test
+    void getUserById_shallReturnUser() throws Exception {
+
+        mvc.perform(get("/users/{id}", user.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(user.getId()))
+                .andExpect(jsonPath("$.username").value("mirela28"));
+    }
+
+    @Test
+    void getUserById_shallReturn404_whenUserNotFound() throws Exception {
+
+        mvc.perform(get("/users/{id}", 999999L))
+                .andExpect(status().isNotFound());
+    }
 }

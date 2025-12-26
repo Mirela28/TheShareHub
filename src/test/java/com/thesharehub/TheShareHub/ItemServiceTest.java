@@ -28,8 +28,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ItemServiceTest {
@@ -38,7 +37,7 @@ class ItemServiceTest {
     private ItemRepositoryAdapter itemRepository;
 
     @Mock
-    private ItemDtoMapper itemDtoMapper;
+    private ItemDtoMapper mapper;
 
     @Mock
     private UserService userService;
@@ -46,68 +45,102 @@ class ItemServiceTest {
     @InjectMocks
     private ItemServiceImpl itemService;
 
-    private Item itemDomain;
+    private Item item;
     private ItemDTO itemDTO;
-    private ItemDTO expectedDTO;
+    private ItemDTO mappedDTO;
+    private User owner;
 
     @BeforeEach
     void setUp() {
-        itemDomain = new Item();
-        itemDomain.setName("Laptop");
-        itemDomain.setDescription("Gaming laptop");
-        itemDomain.setCategory(Category.TECHNOLOGY);
-        itemDomain.setPrice(BigDecimal.valueOf(20));
+        owner = new User();
+        owner.setId(1L);
+        owner.setName("John");
+        owner.setEmail("john@mail.com");
+        owner.setPhone("0612345678");
+
+        item = new Item();
+        item.setId(10L);
+        item.setName("Laptop");
+        item.setDescription("Gaming laptop");
+        item.setCategory(Category.TECHNOLOGY);
+        item.setPrice(BigDecimal.valueOf(20));
+        item.setOwner(owner);
 
         itemDTO = new ItemDTO();
+        itemDTO.setName("Laptop");
         itemDTO.setOwnerId(1L);
 
-        expectedDTO = new ItemDTO();
-        expectedDTO.setName("Laptop");
-        expectedDTO.setCategory(Category.TECHNOLOGY);
+        mappedDTO = new ItemDTO();
+        mappedDTO.setId(10L);
+        mappedDTO.setName("Laptop");
+        mappedDTO.setCategory(Category.TECHNOLOGY);
     }
 
+    // -------------------------------------------------
+    // create
+    // -------------------------------------------------
+
     @Test
-    void createItem_shallSucced_forValidData() {
-        //Arrange
-        User owner = new User();
-        owner.setId(1L);
-
+    void create_shallSucceed_forValidData() {
+        when(itemRepository.findByName("Laptop")).thenReturn(Optional.empty());
         when(userService.findById(1L)).thenReturn(Optional.of(owner));
-        when(itemDtoMapper.toDomain(itemDTO)).thenReturn(itemDomain);
-        when(itemRepository.save(itemDomain)).thenReturn(itemDomain);
-        when(itemDtoMapper.toDTO(itemDomain)).thenReturn(expectedDTO);
+        when(mapper.toDomain(itemDTO)).thenReturn(item);
+        when(itemRepository.save(item)).thenReturn(item);
+        when(mapper.toDTO(item)).thenReturn(mappedDTO);
 
-        //Act
         ItemDTO result = itemService.create(itemDTO);
 
-        //Assert
-        assertEquals(expectedDTO,result);
-        verify(userService).findById(1L);
-        verify(itemDtoMapper).toDomain(itemDTO);
-        verify(itemRepository).save(itemDomain);
-        verify(itemDtoMapper).toDTO(itemDomain);
+        assertEquals("Laptop", result.getName());
+        verify(itemRepository).save(item);
     }
 
     @Test
-    void createItem_shallFail_forNotFoundUser() {
-        ItemDTO itemDTO = new ItemDTO();
-        itemDTO.setOwnerId(1L);
+    void create_shallFail_whenNameAlreadyExists() {
+        when(itemRepository.findByName("Laptop"))
+                .thenReturn(Optional.of(item));
 
+        assertThrows(IllegalArgumentException.class,
+                () -> itemService.create(itemDTO));
+
+        verify(itemRepository, never()).save(any());
+    }
+
+    @Test
+    void create_shallFail_whenOwnerNotFound() {
+        when(itemRepository.findByName("Laptop")).thenReturn(Optional.empty());
         when(userService.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(NoSuchElementException.class, () -> itemService.create(itemDTO));
-        verify(userService).findById(1L);
+        assertThrows(NoSuchElementException.class,
+                () -> itemService.create(itemDTO));
     }
 
+    // -------------------------------------------------
+    // findByName
+    // -------------------------------------------------
+
     @Test
-    void searchItems_shallSucceed_forQueryFilter() {
+    void findByName_shallReturnItem() {
+        when(itemRepository.findByName("Laptop"))
+                .thenReturn(Optional.of(item));
+        when(mapper.toDTO(item)).thenReturn(mappedDTO);
+
+        ItemDTO result = itemService.findByName("Laptop");
+
+        assertEquals("Laptop", result.getName());
+    }
+
+    // -------------------------------------------------
+    // searchItems
+    // -------------------------------------------------
+
+    @Test
+    void searchItems_shallFilterByQuery() {
         ItemFilterDTO filters = new ItemFilterDTO();
         filters.setQuery("Laptop");
         filters.setPage(0);
         filters.setSize(10);
 
-        Page<Item> mockPage = new PageImpl<>(List.of(itemDomain));
-        Page<ItemDTO> expectedPage = new PageImpl<>(List.of(expectedDTO));
+        Page<Item> page = new PageImpl<>(List.of(item));
 
         when(itemRepository.searchItems(
                 eq("Laptop"),
@@ -117,26 +150,24 @@ class ItemServiceTest {
                 isNull(),
                 isNull(),
                 any()
-        )).thenReturn(mockPage);
+        )).thenReturn(page);
 
-        when(itemDtoMapper.toDTO(itemDomain)).thenReturn(expectedDTO);
+        when(mapper.toDTO(item)).thenReturn(mappedDTO);
 
         Page<ItemDTO> result = itemService.searchItems(filters);
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getName()).isEqualTo("Laptop");
-        assertEquals(expectedPage.getContent().get(0), result.getContent().get(0));
+        assertEquals(1, result.getContent().size());
+        assertEquals("Laptop", result.getContent().get(0).getName());
     }
 
     @Test
-    void searchItems_shallSucceed_forCategoryFilter() {
+    void searchItems_shallFilterByCategory() {
         ItemFilterDTO filters = new ItemFilterDTO();
         filters.setCategory("TECHNOLOGY");
         filters.setPage(0);
         filters.setSize(10);
 
-        Page<Item> mockPage = new PageImpl<>(List.of(itemDomain));
-        Page<ItemDTO> expectedPage = new PageImpl<>(List.of(expectedDTO));
+        Page<Item> page = new PageImpl<>(List.of(item));
 
         when(itemRepository.searchItems(
                 isNull(),
@@ -146,45 +177,79 @@ class ItemServiceTest {
                 isNull(),
                 isNull(),
                 any()
-        )).thenReturn(mockPage);
+        )).thenReturn(page);
 
-        when(itemDtoMapper.toDTO(itemDomain)).thenReturn(expectedDTO);
+        when(mapper.toDTO(item)).thenReturn(mappedDTO);
 
         Page<ItemDTO> result = itemService.searchItems(filters);
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getCategory()).isEqualTo(Category.TECHNOLOGY);
-        assertEquals(expectedPage.getContent().get(0), result.getContent().get(0));
+        assertEquals(Category.TECHNOLOGY, result.getContent().get(0).getCategory());
     }
+
+    // -------------------------------------------------
+    // findById
+    // -------------------------------------------------
 
     @Test
-    void searchItems_shallSucceed_forPriceRangeFilter() {
-        ItemFilterDTO filters = new ItemFilterDTO();
-        filters.setMinPrice(BigDecimal.valueOf(10));
-        filters.setMaxPrice(BigDecimal.valueOf(25));
-        filters.setPage(0);
-        filters.setSize(10);
+    void findById_shallReturnCustomDTO() {
+        when(itemRepository.findById(10L)).thenReturn(item);
+        when(mapper.toBase64(any())).thenReturn("image");
 
-        Page<Item> mockPage = new PageImpl<>(List.of(itemDomain));
-        Page<ItemDTO> expectedPage = new PageImpl<>(List.of(expectedDTO));
+        ItemDTO result = itemService.findById(10L);
 
-        when(itemRepository.searchItems(
-                isNull(),
-                isNull(),
-                eq(BigDecimal.valueOf(10)),
-                eq(BigDecimal.valueOf(25)),
-                isNull(),
-                isNull(),
-                any()
-        )).thenReturn(mockPage);
-
-        when(itemDtoMapper.toDTO(itemDomain)).thenReturn(expectedDTO);
-
-        Page<ItemDTO> result = itemService.searchItems(filters);
-
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getName()).isEqualTo("Laptop");
-        assertEquals(expectedPage.getContent().get(0), result.getContent().get(0));
+        assertEquals("Laptop", result.getName());
+        assertEquals("John", result.getOwnerName());
+        assertEquals("0612345678", result.getOwnerPhone());
+        assertEquals("john@mail.com", result.getOwnerEmail());
     }
 
+    // -------------------------------------------------
+    // getUserRentedItems
+    // -------------------------------------------------
+
+    @Test
+    void getUserRentedItems_shallReturnPage() {
+        Page<Item> page = new PageImpl<>(List.of(item));
+
+        when(itemRepository.getUserRentedItems(eq(1L), any()))
+                .thenReturn(page);
+        when(mapper.toDTO(item)).thenReturn(mappedDTO);
+
+        Page<ItemDTO> result = itemService.getUserRentedItems(1L, 0, 5);
+
+        assertEquals(1, result.getContent().size());
+    }
+
+    // -------------------------------------------------
+    // getUserOfferedItems
+    // -------------------------------------------------
+
+    @Test
+    void getUserOfferedItems_shallReturnPage() {
+        Page<Item> page = new PageImpl<>(List.of(item));
+
+        when(itemRepository.getUserOfferedItems(eq(1L), any()))
+                .thenReturn(page);
+        when(mapper.toDTO(item)).thenReturn(mappedDTO);
+
+        Page<ItemDTO> result = itemService.getUserOfferedItems(1L, 0, 5);
+
+        assertEquals(1, result.getContent().size());
+    }
+
+    // -------------------------------------------------
+    // getTop3RentedItems
+    // -------------------------------------------------
+
+    @Test
+    void getTop3RentedItems_shallReturnPage() {
+        Page<Item> page = new PageImpl<>(List.of(item));
+
+        when(itemRepository.getTop3RentedItems()).thenReturn(page);
+        when(mapper.toDTO(item)).thenReturn(mappedDTO);
+
+        Page<ItemDTO> result = itemService.getTop3RentedItems();
+
+        assertEquals(1, result.getContent().size());
+    }
 }

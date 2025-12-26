@@ -21,7 +21,6 @@ import java.util.Base64;
 import java.util.List;
 
 @RestController
-@CrossOrigin("http://localhost:3000")
 @RequestMapping("/items")
 @AllArgsConstructor
 public class ItemController {

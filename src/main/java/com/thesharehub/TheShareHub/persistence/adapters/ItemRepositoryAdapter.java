@@ -4,14 +4,18 @@ import com.thesharehub.TheShareHub.entities.ItemEntity;
 import com.thesharehub.TheShareHub.mapper.ItemEntityMapper;
 import com.thesharehub.TheShareHub.model.Category;
 import com.thesharehub.TheShareHub.model.Item;
+import com.thesharehub.TheShareHub.model.RentStatus;
 import com.thesharehub.TheShareHub.persistence.ItemRepository;
+import com.thesharehub.TheShareHub.persistence.RentRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -21,6 +25,7 @@ public class ItemRepositoryAdapter {
 
     private ItemRepository itemRepository;
     private ItemEntityMapper mapper;
+    private RentRepository rentRepository;
 
     public Item save(Item item) {
         ItemEntity itemEntity = mapper.toEntity(item);
@@ -44,6 +49,31 @@ public class ItemRepositoryAdapter {
                 .orElseThrow(() -> new NoSuchElementException("Item not found with id: " + id));
 
         return mapper.toDomain(itemEntity);
+    }
+
+    public Page<Item> getUserRentedItems(Long userId, Pageable pageable) {
+
+        Page<ItemEntity> entities = itemRepository.getUserRentedItems(userId, pageable);
+
+        return entities.map(mapper::toDomain);
+    }
+
+    public Page<Item> getUserOfferedItems(Long userId, Pageable pageable) {
+
+        Page<ItemEntity> entities = itemRepository.getUserOfferedItems(userId, pageable);
+
+        return entities.map(mapper::toDomain);
+    }
+
+    public Page<Item> getTop3RentedItems() {
+        List<RentStatus> validStatuses = List.of(
+                RentStatus.ONGOING,
+                RentStatus.COMPLETED
+        );
+
+        return rentRepository
+                .getTop3RentedItems(validStatuses, PageRequest.of(0, 3))
+                .map(mapper::toDomain);
     }
 
 }

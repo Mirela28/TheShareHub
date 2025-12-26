@@ -5,6 +5,8 @@ import com.thesharehub.TheShareHub.mapper.RentEntityMapper;
 import com.thesharehub.TheShareHub.model.Rent;
 import com.thesharehub.TheShareHub.persistence.RentRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -24,20 +26,20 @@ public class RentRepositoryAdapter {
         return mapper.toDomain(savedRent);
     }
 
-    public List<Rent> getReceivedRequests(Long userId) {
-        List<RentEntity> receivedRequests = rentRepository.getReceivedRequests(userId);
-
-        return receivedRequests.stream()
-                .map(mapper::toDomain)
-                .toList();
+    public int getCurrentRentsCount(Long requesterId) {
+        return rentRepository.getCurrentRentsCount(requesterId);
     }
 
-    public List<Rent> getSentRequests(Long userId) {
-        List<RentEntity> sentRequests = rentRepository.getSentRequests(userId);
+    public Page<Rent> getReceivedRequests(Long userId, Pageable pageable) {
+        Page<RentEntity> receivedRequests = rentRepository.getReceivedRequests(userId, pageable);
 
-        return sentRequests.stream()
-                .map(mapper::toDomain)
-                .toList();
+        return receivedRequests.map(mapper::toDomain);
+    }
+
+    public Page<Rent> getSentRequests(Long userId, Pageable pageable) {
+        Page<RentEntity> sentRequests = rentRepository.getSentRequests(userId, pageable);
+
+        return sentRequests.map(mapper::toDomain);
     }
 
     public Rent findById(Long rentId) {
@@ -48,5 +50,22 @@ public class RentRepositoryAdapter {
         }
 
         return mapper.toDomain(rentEntity);
+    }
+
+    public void rejectRentsWithConflictingDates(Rent rent) {
+        rentRepository.rejectRentsWithConflictingDates(
+                rent.getId(),
+                rent.getItem().getId(),
+                rent.getStartDate(),
+                rent.getEndDate()
+        );
+    }
+
+    public List<Rent> getApprovedRents(Long itemId) {
+        List<RentEntity> approvedRents = rentRepository.getApprovedRents(itemId);
+
+        return approvedRents.stream().
+                map(mapper::toDomain)
+                .toList();
     }
 }

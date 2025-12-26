@@ -3,12 +3,14 @@ package com.thesharehub.TheShareHub.controller;
 import com.thesharehub.TheShareHub.dtos.ItemCreateDTO;
 import com.thesharehub.TheShareHub.dtos.ItemDTO;
 import com.thesharehub.TheShareHub.dtos.ItemFilterDTO;
+import com.thesharehub.TheShareHub.dtos.RentDTO;
 import com.thesharehub.TheShareHub.service.ItemService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +21,6 @@ import java.util.Base64;
 import java.util.List;
 
 @RestController
-@CrossOrigin("http://localhost:3000")
 @RequestMapping("/items")
 @AllArgsConstructor
 public class ItemController {
@@ -64,7 +65,7 @@ public class ItemController {
         }
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<?> getItemById(@PathVariable Long id) {
         try {
             ItemDTO itemDTO = itemService.findById(id);
@@ -77,5 +78,46 @@ public class ItemController {
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.OK).body(List.of(ex.getMessage()));
         }
+    }
+
+    @GetMapping("/user/rented-items")
+    public ResponseEntity<?> getUserRentedItems(@RequestParam(defaultValue = "0") int page,
+                                                @RequestParam(defaultValue = "6") int size) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+        }
+
+        Long userId = Long.valueOf(auth.getName());
+
+        Page<ItemDTO> userRentedItems = itemService.getUserRentedItems(userId, page, size);
+        return ResponseEntity.status(HttpStatus.OK).body(userRentedItems);
+    }
+
+    @GetMapping("/user/offered-items")
+    public ResponseEntity<?> getUserofferedItems(@RequestParam(defaultValue = "0") int page,
+                                                @RequestParam(defaultValue = "6") int size) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not authenticated");
+        }
+
+        Long userId = Long.valueOf(auth.getName());
+
+        Page<ItemDTO> userOfferedItems = itemService.getUserOfferedItems(userId, page, size);
+
+
+        return ResponseEntity.status(HttpStatus.OK).body(userOfferedItems);
+    }
+
+    @GetMapping("/top-rentals")
+    public ResponseEntity<?> getTop3RentedItems() {
+        Page<ItemDTO> top3RentedItems = itemService.getTop3RentedItems();
+
+        return ResponseEntity.status(HttpStatus.OK).body(top3RentedItems);
     }
 }

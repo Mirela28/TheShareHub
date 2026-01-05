@@ -52,14 +52,8 @@ class UserControllerIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
     private UserEntity user;
 
-    // -------------------------------------------------
-    // Security helper
-    // -------------------------------------------------
 
     private void authenticateAs(Long userId) {
         UsernamePasswordAuthenticationToken auth =
@@ -79,9 +73,6 @@ class UserControllerIntegrationTest {
         SecurityContextHolder.clearContext();
     }
 
-    // -------------------------------------------------
-    // Setup
-    // -------------------------------------------------
 
     @BeforeEach
     void setup() {
@@ -95,9 +86,6 @@ class UserControllerIntegrationTest {
         user = userRepository.save(user);
     }
 
-    // -------------------------------------------------
-    // POST /users (signup)
-    // -------------------------------------------------
 
     @Test
     void signup_shallReturn201_andJwtCookie() throws Exception {
@@ -120,9 +108,6 @@ class UserControllerIntegrationTest {
                 .andExpect(jsonPath("$.id").exists());
     }
 
-    // -------------------------------------------------
-    // POST /users/login
-    // -------------------------------------------------
 
     @Test
     void login_shallReturn200_andJwtCookie() throws Exception {
@@ -140,10 +125,6 @@ class UserControllerIntegrationTest {
                 .andExpect(jsonPath("$.id").value(user.getId()));
     }
 
-    // -------------------------------------------------
-    // POST /users/logout
-    // -------------------------------------------------
-
     @Test
     void logout_shallClearJwtCookie() throws Exception {
 
@@ -152,10 +133,6 @@ class UserControllerIntegrationTest {
                 .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=0")))
                 .andExpect(content().string("Logged out successfully"));
     }
-
-    // -------------------------------------------------
-    // GET /users/me
-    // -------------------------------------------------
 
     @Test
     void me_shallReturnAuthenticatedFalse_whenNotAuthenticated() throws Exception {
@@ -175,10 +152,6 @@ class UserControllerIntegrationTest {
                 .andExpect(jsonPath("$.authenticated").value(true))
                 .andExpect(jsonPath("$.user.id").value(user.getId()));
     }
-
-    // -------------------------------------------------
-    // PUT /users
-    // -------------------------------------------------
 
     @Test
     void updateUser_shallReturn200_andUpdatedUser() throws Exception {
@@ -218,9 +191,6 @@ class UserControllerIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // -------------------------------------------------
-    // GET /users/{id}
-    // -------------------------------------------------
 
     @Test
     void getUserById_shallReturnUser() throws Exception {

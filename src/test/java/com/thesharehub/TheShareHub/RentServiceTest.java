@@ -85,8 +85,6 @@ class RentServiceTest {
         rentDTO.setStatus(RentStatus.PENDING);
     }
 
-    // ---------------- SAVE ----------------
-
     @Test
     void save_success() {
         when(itemService.findById(1L)).thenReturn(itemDTO);
@@ -138,8 +136,6 @@ class RentServiceTest {
                 () -> rentService.save(rentCreateDTO));
     }
 
-    // ---------------- isRentValid ----------------
-
     @Test
     void isRentValid_success() {
         when(rentRepository.getCurrentRentsCount(3L)).thenReturn(0);
@@ -161,7 +157,6 @@ class RentServiceTest {
                 () -> rentService.isRentValid(rentCreateDTO));
     }
 
-    // ---------------- updateStatus ----------------
 
     @Test
     void updateStatus_approve_success() {
@@ -186,7 +181,6 @@ class RentServiceTest {
                 () -> rentService.updateStatus(10L, "APPROVED"));
     }
 
-    // ---------------- updateStatusAutomatic ----------------
 
     @Test
     void updateStatusAutomatic_changesStatus() {
@@ -199,7 +193,6 @@ class RentServiceTest {
         verify(rentRepository).save(rent);
     }
 
-    // ---------------- resolveStatus ----------------
 
     @Test
     void resolveStatus_returnsRejected_whenPendingExpired() {

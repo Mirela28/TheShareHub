@@ -1,8 +1,6 @@
 package com.thesharehub.TheShareHub.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.thesharehub.TheShareHub.TheShareHubApplication;
-import com.thesharehub.TheShareHub.config.TestSecurityConfig;
 import com.thesharehub.TheShareHub.dtos.ItemFilterDTO;
 import com.thesharehub.TheShareHub.entities.ItemEntity;
 import com.thesharehub.TheShareHub.entities.UserEntity;
@@ -55,10 +53,6 @@ class ItemControllerIntegrationTest {
 
     private UserEntity user;
 
-    // -------------------------------------------------
-    // Security helper (same as Rent tests)
-    // -------------------------------------------------
-
     private void authenticateAs(Long userId) {
         UsernamePasswordAuthenticationToken auth =
                 new UsernamePasswordAuthenticationToken(
@@ -77,10 +71,6 @@ class ItemControllerIntegrationTest {
         SecurityContextHolder.clearContext();
     }
 
-    // -------------------------------------------------
-    // Test setup
-    // -------------------------------------------------
-
     @BeforeEach
     void setup() {
         user = new UserEntity();
@@ -92,10 +82,6 @@ class ItemControllerIntegrationTest {
         user.setCity("Amsterdam");
         user = userRepository.save(user);
     }
-
-    // -------------------------------------------------
-    // POST /items (invalid)
-    // -------------------------------------------------
 
     @Test
     void createItem_invalidData_returns400() throws Exception {
@@ -128,10 +114,6 @@ class ItemControllerIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
-    // -------------------------------------------------
-    // POST /items (valid)
-    // -------------------------------------------------
-
     @Test
     void createItem_shallReturn201_andItem() throws Exception {
 
@@ -155,10 +137,6 @@ class ItemControllerIntegrationTest {
                 .andExpect(jsonPath("$.ownerId").value(user.getId()));
     }
 
-    // -------------------------------------------------
-    // POST /items/search
-    // -------------------------------------------------
-
     @Test
     void searchItems_shallReturnPage() throws Exception {
 
@@ -176,10 +154,6 @@ class ItemControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray());
     }
-
-    // -------------------------------------------------
-    // GET /items/{id}
-    // -------------------------------------------------
 
     @Test
     void getItemById_shallReturnItem() throws Exception {
@@ -200,9 +174,6 @@ class ItemControllerIntegrationTest {
                 .andExpect(jsonPath("$.ownerId").value(user.getId()));
     }
 
-    // -------------------------------------------------
-    // GET /items/user/offered-items
-    // -------------------------------------------------
 
     @Test
     void getUserOfferedItems_shallReturnPage() throws Exception {
@@ -214,9 +185,6 @@ class ItemControllerIntegrationTest {
                 .andExpect(jsonPath("$.content").exists());
     }
 
-    // -------------------------------------------------
-    // GET /items/user/rented-items
-    // -------------------------------------------------
 
     @Test
     void getUserRentedItems_shallReturnPage() throws Exception {
@@ -227,10 +195,6 @@ class ItemControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").exists());
     }
-
-    // -------------------------------------------------
-    // GET /items/top-rentals
-    // -------------------------------------------------
 
     @Test
     void getTop3RentedItems_shallReturnPage() throws Exception {

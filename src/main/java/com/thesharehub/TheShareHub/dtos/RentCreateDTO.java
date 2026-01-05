@@ -1,6 +1,5 @@
 package com.thesharehub.TheShareHub.dtos;
 
-import com.thesharehub.TheShareHub.model.RentStatus;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

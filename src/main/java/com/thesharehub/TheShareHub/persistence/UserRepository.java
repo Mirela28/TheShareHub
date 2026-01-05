@@ -1,7 +1,6 @@
 package com.thesharehub.TheShareHub.persistence;
 
 import com.thesharehub.TheShareHub.entities.UserEntity;
-import com.thesharehub.TheShareHub.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

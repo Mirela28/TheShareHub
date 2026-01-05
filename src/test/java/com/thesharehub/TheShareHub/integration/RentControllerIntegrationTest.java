@@ -1,7 +1,6 @@
 package com.thesharehub.TheShareHub.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.thesharehub.TheShareHub.TheShareHubApplication;
 import com.thesharehub.TheShareHub.config.TestSecurityConfig;
 import com.thesharehub.TheShareHub.config.TestWebSocketConfig;
 import com.thesharehub.TheShareHub.dtos.RentCreateDTO;
@@ -28,7 +27,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 

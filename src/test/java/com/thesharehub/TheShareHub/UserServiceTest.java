@@ -6,7 +6,6 @@ import com.thesharehub.TheShareHub.dtos.UpdateUserDTO;
 import com.thesharehub.TheShareHub.dtos.UserDTO;
 import com.thesharehub.TheShareHub.mapper.UserDtoMapper;
 import com.thesharehub.TheShareHub.model.User;
-import com.thesharehub.TheShareHub.persistence.UserRepository;
 import com.thesharehub.TheShareHub.persistence.adapters.UserRepositoryAdapter;
 import com.thesharehub.TheShareHub.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;

@@ -68,4 +68,12 @@ public class RentRepositoryAdapter {
                 map(mapper::toDomain)
                 .toList();
     }
+
+    public List<Rent> findAllActiveRents() {
+        List<RentEntity> activeRents = rentRepository.findAllActiveRents();
+
+        return activeRents.stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
 }

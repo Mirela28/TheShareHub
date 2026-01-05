@@ -1,7 +1,6 @@
 package com.thesharehub.TheShareHub.controller;
 
 import com.thesharehub.TheShareHub.dtos.*;
-import com.thesharehub.TheShareHub.model.RentStatus;
 import com.thesharehub.TheShareHub.service.RentService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;

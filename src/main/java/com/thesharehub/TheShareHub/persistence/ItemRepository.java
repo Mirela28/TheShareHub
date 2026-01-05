@@ -1,7 +1,6 @@
 package com.thesharehub.TheShareHub.persistence;
 
 import com.thesharehub.TheShareHub.entities.ItemEntity;
-import com.thesharehub.TheShareHub.entities.RentEntity;
 import com.thesharehub.TheShareHub.model.Category;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.Optional;
 
 @Repository

@@ -62,7 +62,7 @@ jobs:
     permissions:
       contents: read
     env:
-      REACT_APP_API_BASE_URL: http://localhost:8080
+      REACT_APP_API_BASE_URL: ${{ secrets.REACT_APP_API_BASE_URL }}
 
     steps:
     - uses: actions/checkout@v4

@@ -1,6 +1,5 @@
 package com.thesharehub.TheShareHub.dtos;
 
-import com.thesharehub.TheShareHub.model.Category;
 import lombok.Data;
 
 import java.math.BigDecimal;

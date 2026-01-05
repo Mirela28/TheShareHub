@@ -4,7 +4,6 @@ import com.thesharehub.TheShareHub.dtos.ItemDTO;
 import com.thesharehub.TheShareHub.model.Item;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 import java.util.Base64;
 

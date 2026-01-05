@@ -1,11 +1,6 @@
 package com.thesharehub.TheShareHub.dtos;
 
 import com.thesharehub.TheShareHub.model.Category;
-import com.thesharehub.TheShareHub.model.User;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -13,8 +8,6 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.URL;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 

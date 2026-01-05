@@ -12,12 +12,12 @@ import com.thesharehub.TheShareHub.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -37,7 +37,12 @@ public class ItemServiceImpl implements ItemService {
         if(!errors.isEmpty())
             throw new IllegalArgumentException(String.join(", ", errors));
 
-        User owner = userService.findById(itemDTO.getOwnerId()).get();
+        Optional<User> ownerOptional = userService.findById(itemDTO.getOwnerId());
+
+        if(ownerOptional.isEmpty()) {
+            throw new NoSuchElementException("Owner with ID " + itemDTO.getOwnerId() + " not found");
+        }
+        User owner = ownerOptional.get();
 
         Item item = mapper.toDomain(itemDTO);
         item.setOwner(owner);
@@ -49,7 +54,11 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDTO findByName(String name) {
-        Item item = itemRepository.findByName(name).get();
+        Optional<Item> itemOptional = itemRepository.findByName(name);
+        if(itemOptional.isEmpty()) {
+            throw new NoSuchElementException("Item with name " + name + " not found");
+        }
+        Item item = itemOptional.get();
         return mapper.toDTO(item);
     }
 

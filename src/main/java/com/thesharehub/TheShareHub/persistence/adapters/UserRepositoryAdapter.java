@@ -1,12 +1,8 @@
 package com.thesharehub.TheShareHub.persistence.adapters;
 
-import com.thesharehub.TheShareHub.entities.ItemEntity;
 import com.thesharehub.TheShareHub.entities.UserEntity;
-import com.thesharehub.TheShareHub.mapper.ItemEntityMapper;
 import com.thesharehub.TheShareHub.mapper.UserEntityMapper;
-import com.thesharehub.TheShareHub.model.Item;
 import com.thesharehub.TheShareHub.model.User;
-import com.thesharehub.TheShareHub.persistence.ItemRepository;
 import com.thesharehub.TheShareHub.persistence.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;

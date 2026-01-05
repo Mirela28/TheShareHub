@@ -2,13 +2,11 @@ package com.thesharehub.TheShareHub;
 
 import com.thesharehub.TheShareHub.dtos.ItemDTO;
 import com.thesharehub.TheShareHub.dtos.ItemFilterDTO;
-import com.thesharehub.TheShareHub.entities.ItemEntity;
 import com.thesharehub.TheShareHub.mapper.ItemDtoMapper;
 import com.thesharehub.TheShareHub.model.Category;
 import com.thesharehub.TheShareHub.model.Item;
 import com.thesharehub.TheShareHub.model.User;
 import com.thesharehub.TheShareHub.persistence.adapters.ItemRepositoryAdapter;
-import com.thesharehub.TheShareHub.service.ItemService;
 import com.thesharehub.TheShareHub.service.UserService;
 import com.thesharehub.TheShareHub.service.impl.ItemServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +22,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
@@ -76,10 +74,6 @@ class ItemServiceTest {
         mappedDTO.setCategory(Category.TECHNOLOGY);
     }
 
-    // -------------------------------------------------
-    // create
-    // -------------------------------------------------
-
     @Test
     void create_shallSucceed_forValidData() {
         when(itemRepository.findByName("Laptop")).thenReturn(Optional.empty());
@@ -114,10 +108,6 @@ class ItemServiceTest {
                 () -> itemService.create(itemDTO));
     }
 
-    // -------------------------------------------------
-    // findByName
-    // -------------------------------------------------
-
     @Test
     void findByName_shallReturnItem() {
         when(itemRepository.findByName("Laptop"))
@@ -128,10 +118,6 @@ class ItemServiceTest {
 
         assertEquals("Laptop", result.getName());
     }
-
-    // -------------------------------------------------
-    // searchItems
-    // -------------------------------------------------
 
     @Test
     void searchItems_shallFilterByQuery() {
@@ -186,10 +172,6 @@ class ItemServiceTest {
         assertEquals(Category.TECHNOLOGY, result.getContent().get(0).getCategory());
     }
 
-    // -------------------------------------------------
-    // findById
-    // -------------------------------------------------
-
     @Test
     void findById_shallReturnCustomDTO() {
         when(itemRepository.findById(10L)).thenReturn(item);
@@ -202,10 +184,6 @@ class ItemServiceTest {
         assertEquals("0612345678", result.getOwnerPhone());
         assertEquals("john@mail.com", result.getOwnerEmail());
     }
-
-    // -------------------------------------------------
-    // getUserRentedItems
-    // -------------------------------------------------
 
     @Test
     void getUserRentedItems_shallReturnPage() {
@@ -220,10 +198,6 @@ class ItemServiceTest {
         assertEquals(1, result.getContent().size());
     }
 
-    // -------------------------------------------------
-    // getUserOfferedItems
-    // -------------------------------------------------
-
     @Test
     void getUserOfferedItems_shallReturnPage() {
         Page<Item> page = new PageImpl<>(List.of(item));
@@ -236,10 +210,6 @@ class ItemServiceTest {
 
         assertEquals(1, result.getContent().size());
     }
-
-    // -------------------------------------------------
-    // getTop3RentedItems
-    // -------------------------------------------------
 
     @Test
     void getTop3RentedItems_shallReturnPage() {

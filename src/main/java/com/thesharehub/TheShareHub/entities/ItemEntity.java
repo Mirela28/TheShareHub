@@ -1,7 +1,6 @@
 package com.thesharehub.TheShareHub.entities;
 
 import com.thesharehub.TheShareHub.model.Category;
-import com.thesharehub.TheShareHub.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,8 +1,5 @@
 package com.thesharehub.TheShareHub.model;
 
-import com.thesharehub.TheShareHub.entities.ItemEntity;
-import com.thesharehub.TheShareHub.entities.UserEntity;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

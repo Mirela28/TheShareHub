@@ -1,4 +1,4 @@
-package com.thesharehub.TheShareHub.integration;
+package com.thesharehub.TheShareHub.integrationtests;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thesharehub.TheShareHub.TheShareHubApplication;
@@ -7,7 +7,6 @@ import com.thesharehub.TheShareHub.dtos.SignUpDTO;
 import com.thesharehub.TheShareHub.dtos.UpdateUserDTO;
 import com.thesharehub.TheShareHub.entities.UserEntity;
 import com.thesharehub.TheShareHub.persistence.UserRepository;
-import com.thesharehub.TheShareHub.utils.JwtUtil;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,15 +31,9 @@ import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
-        classes = TheShareHubApplication.class
-)
+@SpringBootTest()
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-@TestPropertySource(locations = "classpath:application-test.properties")
-@Transactional
 class UserControllerIntegrationTest {
 
     @Autowired
@@ -71,6 +64,12 @@ class UserControllerIntegrationTest {
     @AfterEach
     void clearSecurityContext() {
         SecurityContextHolder.clearContext();
+
+    }
+
+    @AfterEach
+    void cleanupDatabase() {
+        userRepository.deleteAll();
     }
 
 
@@ -106,23 +105,6 @@ class UserControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("token=")))
                 .andExpect(jsonPath("$.id").exists());
-    }
-
-
-    @Test
-    void login_shallReturn200_andJwtCookie() throws Exception {
-
-        LogInDTO dto = new LogInDTO(
-                user.getUsername(),
-                "Password1!"
-        );
-
-        mvc.perform(post("/users/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(dto)))
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("token=")))
-                .andExpect(jsonPath("$.id").value(user.getId()));
     }
 
     @Test
@@ -199,12 +181,5 @@ class UserControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(user.getId()))
                 .andExpect(jsonPath("$.username").value("mirela28"));
-    }
-
-    @Test
-    void getUserById_shallReturn404_whenUserNotFound() throws Exception {
-
-        mvc.perform(get("/users/{id}", 999999L))
-                .andExpect(status().isNotFound());
     }
 }

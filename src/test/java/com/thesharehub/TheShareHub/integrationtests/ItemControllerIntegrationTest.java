@@ -1,4 +1,4 @@
-package com.thesharehub.TheShareHub.integration;
+package com.thesharehub.TheShareHub.integrationtests;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thesharehub.TheShareHub.dtos.ItemFilterDTO;
@@ -31,12 +31,9 @@ import java.util.List;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@SpringBootTest()
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-@TestPropertySource(locations = "classpath:application-test.properties")
-@Transactional
 class ItemControllerIntegrationTest {
 
     @Autowired
@@ -165,11 +162,11 @@ class ItemControllerIntegrationTest {
         item.setCategory(Category.TRANSPORT);
         item.setPrice(BigDecimal.valueOf(15));
         item.setOwner(user);
-        item = itemRepository.save(item);
+        ItemEntity savedItem = itemRepository.save(item);
 
-        mvc.perform(get("/items/{id}", item.getId()))
+        mvc.perform(get("/items/{id}", savedItem.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(item.getId()))
+                .andExpect(jsonPath("$.id").value(savedItem.getId()))
                 .andExpect(jsonPath("$.name").value("Bike"))
                 .andExpect(jsonPath("$.ownerId").value(user.getId()));
     }

@@ -3,7 +3,7 @@ package com.thesharehub.TheShareHub.controller;
 import com.thesharehub.TheShareHub.dtos.*;
 import com.thesharehub.TheShareHub.model.User;
 import com.thesharehub.TheShareHub.service.UserService;
-import com.thesharehub.TheShareHub.utils.JwtUtil;
+import com.thesharehub.TheShareHub.unittests.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpHeaders;

@@ -7,6 +7,8 @@ import com.thesharehub.TheShareHub.dtos.SignUpDTO;
 import com.thesharehub.TheShareHub.dtos.UpdateUserDTO;
 import com.thesharehub.TheShareHub.entities.UserEntity;
 import com.thesharehub.TheShareHub.persistence.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,12 +30,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest()
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
+@Transactional
 class UserControllerIntegrationTest {
 
     @Autowired
@@ -44,6 +48,9 @@ class UserControllerIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @PersistenceContext
+    private EntityManager em;
 
     private UserEntity user;
 
@@ -62,14 +69,8 @@ class UserControllerIntegrationTest {
     }
 
     @AfterEach
-    void clearSecurityContext() {
+    void clearcontext() {
         SecurityContextHolder.clearContext();
-
-    }
-
-    @AfterEach
-    void cleanupDatabase() {
-        userRepository.deleteAll();
     }
 
 
@@ -105,6 +106,17 @@ class UserControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("token=")))
                 .andExpect(jsonPath("$.id").exists());
+
+        em.flush();
+        em.clear();
+
+        UserEntity createdUser = em.createQuery("SELECT u FROM UserEntity u WHERE u.username = :username", UserEntity.class)
+                .setParameter("username", "newuser28")
+                .getSingleResult();
+
+        assertEquals("Mirela", createdUser.getName());
+        assertEquals("newuser@mail.com", createdUser.getEmail());
+
     }
 
     @Test
@@ -154,6 +166,14 @@ class UserControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("UpdatedName"))
                 .andExpect(jsonPath("$.city").value("Eindhoven"));
+
+        em.flush();
+        em.clear();
+
+        UserEntity updatedUser = em.find(UserEntity.class, user.getId());
+
+        assertEquals("UpdatedName", updatedUser.getName());
+        assertEquals("updatedusername", updatedUser.getUsername());
     }
 
     @Test

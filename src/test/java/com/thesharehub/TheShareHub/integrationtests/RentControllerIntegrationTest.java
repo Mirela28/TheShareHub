@@ -13,6 +13,8 @@ import com.thesharehub.TheShareHub.model.RentStatus;
 import com.thesharehub.TheShareHub.persistence.ItemRepository;
 import com.thesharehub.TheShareHub.persistence.RentRepository;
 import com.thesharehub.TheShareHub.persistence.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +35,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -46,6 +50,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         TestSecurityConfig.class,
         TestWebSocketConfig.class
 })
+@Transactional
 class RentControllerIntegrationTest {
 
     @Autowired
@@ -66,6 +71,8 @@ class RentControllerIntegrationTest {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
+    @PersistenceContext
+    private EntityManager em;
 
     private void authenticateAs(Long userId) {
         UsernamePasswordAuthenticationToken auth =
@@ -119,6 +126,20 @@ class RentControllerIntegrationTest {
                 .andExpect(jsonPath("$.item.id").value(savedItem.getId()))
                 .andExpect(jsonPath("$.rentier.email").value("owner@test.com"))
                 .andExpect(jsonPath("$.requester.email").value("req@test.com"));
+
+        em.flush();
+        em.clear();
+
+        RentEntity createdRent = em.createQuery("SELECT r FROM RentEntity r WHERE r.item.id = :itemId AND r.requester.id = :requesterId", RentEntity.class)
+                .setParameter("itemId", savedItem.getId())
+                .setParameter("requesterId", savedRequester.getId())
+                .getSingleResult();
+
+        assertNotNull(createdRent);
+        assertEquals(RentStatus.PENDING, createdRent.getStatus());
+        assertEquals(savedItem.getId(), createdRent.getItem().getId());
+        assertEquals(savedOwner.getId(), createdRent.getRentier().getId());
+        assertEquals(savedRequester.getId(), createdRent.getRequester().getId());
     }
 
 
@@ -228,6 +249,12 @@ class RentControllerIntegrationTest {
                 eq("/topic/rents/" + savedRent.getId()),
                 any(RentDTO.class)
         );
+
+        em.flush();
+        em.clear();
+
+        RentEntity updatedRent = em.find(RentEntity.class, savedRent.getId());
+        assertEquals(RentStatus.APPROVED, updatedRent.getStatus());
     }
 
 

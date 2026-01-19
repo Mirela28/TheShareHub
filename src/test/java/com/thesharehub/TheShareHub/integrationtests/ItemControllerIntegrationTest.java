@@ -7,6 +7,8 @@ import com.thesharehub.TheShareHub.entities.UserEntity;
 import com.thesharehub.TheShareHub.model.Category;
 import com.thesharehub.TheShareHub.persistence.ItemRepository;
 import com.thesharehub.TheShareHub.persistence.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,12 +30,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest()
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
+@Transactional
 class ItemControllerIntegrationTest {
 
     @Autowired
@@ -47,6 +51,9 @@ class ItemControllerIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @PersistenceContext
+    private EntityManager em;
 
     private UserEntity user;
 
@@ -132,6 +139,17 @@ class ItemControllerIntegrationTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.name").value("Bike"))
                 .andExpect(jsonPath("$.ownerId").value(user.getId()));
+
+        em.flush();
+        em.clear();
+
+        ItemEntity createdItem = em.createQuery("SELECT i FROM ItemEntity i WHERE i.name = :name", ItemEntity.class)
+                .setParameter("name", "Bike")
+                .getSingleResult();
+
+        assertEquals("Very nice city bike in excellent condition", createdItem.getDescription());
+        assertEquals(Category.TRANSPORT, createdItem.getCategory());
+        assertEquals(0, createdItem.getPrice().compareTo(BigDecimal.valueOf(15)));
     }
 
     @Test

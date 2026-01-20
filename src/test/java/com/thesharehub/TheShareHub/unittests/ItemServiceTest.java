@@ -1,4 +1,4 @@
-package com.thesharehub.TheShareHub;
+package com.thesharehub.TheShareHub.unittests;
 
 import com.thesharehub.TheShareHub.dtos.ItemDTO;
 import com.thesharehub.TheShareHub.dtos.ItemFilterDTO;

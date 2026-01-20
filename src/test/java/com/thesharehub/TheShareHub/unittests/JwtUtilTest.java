@@ -1,4 +1,4 @@
-package com.thesharehub.TheShareHub.utils;
+package com.thesharehub.TheShareHub.unittests;
 
 import io.jsonwebtoken.JwtException;
 import org.junit.jupiter.api.BeforeEach;

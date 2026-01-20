@@ -1,4 +1,4 @@
-package com.thesharehub.TheShareHub.utils;
+package com.thesharehub.TheShareHub.unittests;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

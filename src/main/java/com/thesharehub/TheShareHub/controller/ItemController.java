@@ -53,6 +53,37 @@ public class ItemController {
         }
     }
 
+    @PostMapping("/no-image")
+    public ResponseEntity<?> createItemWithoutImage(
+            @Valid @RequestBody ItemCreateDTO itemCreateDTO) {
+        try {
+            ItemDTO itemDTO = new ItemDTO();
+            itemDTO.setName(itemCreateDTO.getName());
+            itemDTO.setDescription(itemCreateDTO.getDescription());
+            itemDTO.setConditions(itemCreateDTO.getConditions());
+            itemDTO.setPrice(itemCreateDTO.getPrice());
+            itemDTO.setCategory(itemCreateDTO.getCategory());
+
+            String ownerId = SecurityContextHolder
+                    .getContext()
+                    .getAuthentication()
+                    .getName();
+
+            itemDTO.setOwnerId(Long.valueOf(ownerId));
+
+            ItemDTO savedItem = itemService.create(itemDTO);
+
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(savedItem);
+
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(List.of("errors", List.of(ex.getMessage())));
+        }
+    }
+
     @PostMapping("/search")
     public ResponseEntity<?> searchItem(@RequestBody ItemFilterDTO filters) {
         try {

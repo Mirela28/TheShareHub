@@ -1,4 +1,4 @@
-package com.thesharehub.TheShareHub.utils;
+package com.thesharehub.TheShareHub.unittests;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,6 +22,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public JwtAuthenticationFilter(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
     }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return "OPTIONS".equalsIgnoreCase(request.getMethod());
+    }
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,

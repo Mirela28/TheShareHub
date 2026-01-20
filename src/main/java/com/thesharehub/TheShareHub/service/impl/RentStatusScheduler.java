@@ -21,6 +21,7 @@ public class RentStatusScheduler {
     @Transactional
     @Scheduled(fixedRate = 10 * 60 * 1000)
     public void updateRentStatuses() {
+        System.out.println("SCHEDULER RUN " + java.time.LocalDateTime.now());
         List<Rent> activeRents = rentRepository.findAllActiveRents();
 
         for (Rent rent : activeRents) {

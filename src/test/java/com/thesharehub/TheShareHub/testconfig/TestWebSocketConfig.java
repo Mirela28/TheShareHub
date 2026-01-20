@@ -1,4 +1,4 @@
-package com.thesharehub.TheShareHub.config;
+package com.thesharehub.TheShareHub.testconfig;
 
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;

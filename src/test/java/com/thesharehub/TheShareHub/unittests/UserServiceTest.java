@@ -1,4 +1,4 @@
-package com.thesharehub.TheShareHub;
+package com.thesharehub.TheShareHub.unittests;
 
 import com.thesharehub.TheShareHub.dtos.LogInDTO;
 import com.thesharehub.TheShareHub.dtos.SignUpDTO;
